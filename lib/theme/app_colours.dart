@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 
-class Colours{
+class Colours {
   static const cardColor = Color.fromRGBO(30, 30, 30, 1);
   static const greenColor = Colors.green;
   static const subtitleText = Color(0xffa7a7a7);
@@ -15,6 +14,7 @@ class Colours{
   static const Color whiteColor = Colors.white;
   static const Color greyColor = Colors.grey;
   static const Color errorColor = Colors.redAccent;
+  static const Color selectedIndex = Color.fromARGB(255, 229, 57, 53);
   static const Color transparentColor = Colors.transparent;
 
   static const Color inactiveSeekColor = Colors.white38;

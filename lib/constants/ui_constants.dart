@@ -14,4 +14,11 @@ class UIConstants {
       centerTitle: true,
     );
   }
+
+  static List<Widget> navPages = [
+    const Center(child: Text('Home')),
+    const Center(child: Text('Explore')),
+    const Center(child: Text('Profile')),
+    const Center(child: Text('Settings')),
+  ];
 }
