@@ -1,10 +1,13 @@
-import 'package:fieldforce/constants/constants.dart';
-import 'package:fieldforce/features/auth/viewmodel/auth_controller.dart';
-import 'package:fieldforce/theme/theme.dart';
-import 'package:fieldforce/utils/loading_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/auth_vwidgets.dart';
+
+import 'package:fieldforce/common/widgets/app_text_field.dart';
+import 'package:fieldforce/features/auth/controller/auth_controller.dart';
+import 'package:fieldforce/features/auth/view/widgets/auth_vwidgets.dart';
+import 'package:fieldforce/theme/theme.dart';
+import 'package:fieldforce/utils/loading_page.dart';
+
+import 'forgot_password_page.dart';
 import 'signup_page.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
@@ -14,11 +17,11 @@ class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
 
   @override
-  ConsumerState<SignInPage> createState() => _SignupPageState();
+  ConsumerState<SignInPage> createState() => _SignInPageState();
 }
 
-class _SignupPageState extends ConsumerState<SignInPage> {
-  final appbar = UIConstants.appBar();
+class _SignInPageState extends ConsumerState<SignInPage> {
+  final appbar = CustomAppBar.appBar(const Text("Sign In"));
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -58,20 +61,30 @@ class _SignupPageState extends ConsumerState<SignInPage> {
                       ),
                     ),
                     const SizedBox(height: 30.0),
-                    AuthField(
+                    AppTextField(
                       hintText: 'Email',
                       controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 15.0),
-                    AuthField(
+                    AppTextField(
                       hintText: 'Password',
                       controller: passwordController,
-                      isObscureText: true,
+                      obscureText: true,
                     ),
                     const SizedBox(height: 20.0),
                     AuthButton(
                       buttonText: 'Sign In',
                       onTap: onSignIn,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          ForgotPasswordPage.route(),
+                        );
+                      },
+                      child: const Text('Forgot Password?'),
                     ),
                     const SizedBox(height: 20.0),
                     GestureDetector(
@@ -79,7 +92,7 @@ class _SignupPageState extends ConsumerState<SignInPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const SignupPage(),
+                            builder: (context) => const SignUpPage(),
                           ),
                         );
                       },

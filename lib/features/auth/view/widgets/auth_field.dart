@@ -20,7 +20,7 @@ class AuthField extends StatelessWidget {
         hintText: hintText,
       ),
       validator: (val) {
-        if (val!.trim().isEmpty) {
+        if (val == null || val.trim().isEmpty) {
           return "$hintText is missing!";
         }
         return null;

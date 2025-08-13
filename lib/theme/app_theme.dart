@@ -17,5 +17,6 @@ class AppTheme {
       enabledBorder: _border(Colours.borderColor),
       focusedBorder: _border(Colours.gradient2),
     ),
+    iconTheme: const IconThemeData(color: Colours.whiteColor, size: 30),
   );
 }
