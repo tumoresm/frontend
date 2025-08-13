@@ -30,10 +30,12 @@ class _WithdrawalRequestDialogState extends ConsumerState<WithdrawalRequestDialo
   void initState() {
     super.initState();
     // Set default bank account if available
-    _selectedBankAccount = widget.bankAccounts.firstWhere(
-      (account) => account.isDefault,
-      orElse: () => widget.bankAccounts.isNotEmpty ? widget.bankAccounts.first : null,
-    );
+    if (widget.bankAccounts.isNotEmpty) {
+      _selectedBankAccount = widget.bankAccounts.firstWhere(
+        (account) => account.isDefault,
+        orElse: () => widget.bankAccounts.first,
+      );
+    }
   }
 
   @override
@@ -139,7 +141,7 @@ class _WithdrawalRequestDialogState extends ConsumerState<WithdrawalRequestDialo
                 controller: _amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\\d+\\.?\\d{0,2}')),
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
                 style: const TextStyle(color: Colours.whiteColor),
                 decoration: InputDecoration(
@@ -210,6 +212,135 @@ class _WithdrawalRequestDialogState extends ConsumerState<WithdrawalRequestDialo
                   ),
                 )
               else
-                DropdownButtonFormField<BankAccountModel>(\n                  value: _selectedBankAccount,\n                  style: const TextStyle(color: Colours.whiteColor),\n                  dropdownColor: Colours.cardColor,\n                  decoration: InputDecoration(\n                    filled: true,\n                    fillColor: Colours.backgroundColor,\n                    border: OutlineInputBorder(\n                      borderRadius: BorderRadius.circular(8),\n                      borderSide: const BorderSide(color: Colours.borderColor),\n                    ),\n                    enabledBorder: OutlineInputBorder(\n                      borderRadius: BorderRadius.circular(8),\n                      borderSide: const BorderSide(color: Colours.borderColor),\n                    ),\n                  ),\n                  items: widget.bankAccounts.map((account) {\n                    return DropdownMenuItem<BankAccountModel>(\n                      value: account,\n                      child: Text(\n                        account.displayName,\n                        style: const TextStyle(color: Colours.whiteColor),\n                      ),\n                    );\n                  }).toList(),\n                  onChanged: (value) {\n                    setState(() {\n                      _selectedBankAccount = value;\n                    });\n                  },\n                  validator: (value) {\n                    if (value == null) {\n                      return 'Please select a bank account';\n                    }\n                    return null;\n                  },\n                ),\n              \n              const SizedBox(height: 24),\n              \n              // Processing Fee Info\n              Container(\n                width: double.infinity,\n                padding: const EdgeInsets.all(12),\n                decoration: BoxDecoration(\n                  color: Colors.orange.withOpacity(0.1),\n                  borderRadius: BorderRadius.circular(8),\n                  border: Border.all(\n                    color: Colors.orange.withOpacity(0.3),\n                  ),\n                ),\n                child: const Row(\n                  children: [\n                    Icon(\n                      Symbols.info,\n                      color: Colors.orange,\n                      size: 16,\n                    ),\n                    SizedBox(width: 8),\n                    Expanded(\n                      child: Text(\n                        'Processing fees may apply. You will be notified of any fees before the withdrawal is processed.',\n                        style: TextStyle(\n                          color: Colors.orange,\n                          fontSize: 12,\n                        ),\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              \n              const SizedBox(height: 24),\n              \n              // Action Buttons\n              Row(\n                children: [\n                  Expanded(\n                    child: OutlinedButton(\n                      onPressed: isLoading ? null : () => Navigator.pop(context),\n                      style: OutlinedButton.styleFrom(\n                        side: const BorderSide(color: Colours.borderColor),\n                        shape: RoundedRectangleBorder(\n                          borderRadius: BorderRadius.circular(8),\n                        ),\n                      ),\n                      child: const Text(\n                        'Cancel',\n                        style: TextStyle(color: Colours.whiteColor),\n                      ),\n                    ),\n                  ),\n                  const SizedBox(width: 12),\n                  Expanded(\n                    child: FlatButton(\n                      buttonText: isLoading ? 'Processing...' : 'Request Withdrawal',\n                      onTap: isLoading ? () {} : _submitWithdrawalRequest,\n                    ),\n                  ),\n                ],\n              ),\n            ],\n          ),\n        ),\n      ),\n    );\n  }\n\n  void _submitWithdrawalRequest() {\n    if (!_formKey.currentState!.validate()) return;\n    if (_selectedBankAccount == null) return;\n    if (widget.bankAccounts.isEmpty) return;\n\n    final amount = double.parse(_amountController.text);\n    \n    final withdrawalRequest = WithdrawalRequestModel(\n      id: '', // Will be assigned by database\n      userId: widget.wallet.userId,\n      amount: amount,\n      bankAccountId: _selectedBankAccount!.id,\n      status: WithdrawalStatus.pending,\n      requestedAt: DateTime.now(),\n    );\n\n    ref.read(walletControllerProvider.notifier).createWithdrawalRequest(\n      request: withdrawalRequest,\n      context: context,\n    );\n\n    Navigator.pop(context);\n  }\n}"
+                DropdownButtonFormField<BankAccountModel>(
+                  value: _selectedBankAccount,
+                  style: const TextStyle(color: Colours.whiteColor),
+                  dropdownColor: Colours.cardColor,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colours.backgroundColor,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colours.borderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colours.borderColor),
+                    ),
+                  ),
+                  items: widget.bankAccounts.map((account) {
+                    return DropdownMenuItem<BankAccountModel>(
+                      value: account,
+                      child: Text(
+                        account.displayName,
+                        style: const TextStyle(color: Colours.whiteColor),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedBankAccount = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a bank account';
+                    }
+                    return null;
+                  },
+                ),
+              
+              const SizedBox(height: 24),
+              
+              // Processing Fee Info
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.orange.withOpacity(0.3),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Symbols.info,
+                      color: Colors.orange,
+                      size: 16,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Processing fees may apply. You will be notified of any fees before the withdrawal is processed.',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: isLoading ? null : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colours.borderColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colours.whiteColor),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FlatButton(
+                      buttonText: isLoading ? 'Processing...' : 'Request Withdrawal',
+                      onTap: isLoading ? () {} : _submitWithdrawalRequest,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
-]
+
+  void _submitWithdrawalRequest() {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedBankAccount == null) return;
+    if (widget.bankAccounts.isEmpty) return;
+
+    final amount = double.parse(_amountController.text);
+    
+    final withdrawalRequest = WithdrawalRequestModel(
+      id: '', // Will be assigned by database
+      userId: widget.wallet.userId,
+      amount: amount,
+      bankAccountId: _selectedBankAccount!.id,
+      status: WithdrawalStatus.pending,
+      requestedAt: DateTime.now(),
+    );
+
+    ref.read(walletControllerProvider.notifier).createWithdrawalRequest(
+      request: withdrawalRequest,
+      context: context,
+    );
+
+    Navigator.pop(context);
+  }
+}
