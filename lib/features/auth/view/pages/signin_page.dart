@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:fieldforce/common/widgets/app_text_field.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/widgets/auth_vwidgets.dart';
 import 'package:fieldforce/theme/theme.dart';
@@ -61,13 +59,13 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       ),
                     ),
                     const SizedBox(height: 30.0),
-                    AppTextField(
+                    AuthField(
                       hintText: 'Email',
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 15.0),
-                    AppTextField(
+                    AuthField(
                       hintText: 'Password',
                       controller: passwordController,
                       obscureText: true,

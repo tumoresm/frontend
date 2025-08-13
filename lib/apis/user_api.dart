@@ -24,7 +24,7 @@ class UserAPI implements IUserAPI {
     try {
       await _db.createDocument(
         databaseId: AppwriteConstants.databaseId,
-        collectionId: AppwriteConstants.userCollectionId,
+        collectionId: AppwriteConstants.usersCollection,
         documentId: userModel.id,
         data: userModel.toMap(),
       );
