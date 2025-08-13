@@ -3,6 +3,13 @@ import 'package:fieldforce/theme/app_colours.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+// Static color constants for const constructors
+class _WalletColors {
+  static final Color subtitleColor = Colours.whiteColor.withOpacity(0.8);
+  static final Color iconColor = Colours.whiteColor.withOpacity(0.8);
+  static final Color labelColor = Colours.whiteColor.withOpacity(0.7);
+}
+
 class WalletBalanceCard extends StatelessWidget {
   final WalletModel? wallet;
   final bool isLoading;
@@ -106,7 +113,7 @@ class WalletBalanceCard extends StatelessWidget {
           Text(
             'Available Balance',
             style: TextStyle(
-              color: Colours.whiteColor.withOpacity(0.8),
+              color: _WalletColors.subtitleColor,
               fontSize: 14,
             ),
           ),
@@ -143,7 +150,7 @@ class WalletBalanceCard extends StatelessWidget {
       children: [
         Icon(
           icon,
-          color: Colours.whiteColor.withOpacity(0.8),
+          color: _WalletColors.iconColor,
           size: 16,
         ),
         const SizedBox(height: 4),
@@ -158,7 +165,7 @@ class WalletBalanceCard extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colours.whiteColor.withOpacity(0.7),
+            color: _WalletColors.labelColor,
             fontSize: 10,
           ),
         ),
