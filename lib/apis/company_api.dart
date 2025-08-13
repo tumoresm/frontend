@@ -1,18 +1,64 @@
-import 'package:fieldforce/model/company_model.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as appwrite_models;
+import 'package:fieldforce/constants/appwrite_constants.dart';
+import 'package:fieldforce/core/core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
+
+final companyAPIProvider = Provider((ref) {
+  return CompanyAPI(
+    databases: ref.watch(appwriteDatabasesProvider),
+  );
+});
 
 abstract class ICompanyAPI {
-  /// Fetches all companies where isActive is true.
-  Future<List<Company>> getActiveCompanies({String? search, String? industry});
-
-  /// Fetches a single company by its ID.
-  Future<Company?> getCompanyById(String companyId);
-
-  /// Adds a company to the rep's profile (repCompanyRelations collection).
-  Future<void> addCompanyToRepProfile({
-    required String userId,
-    required String companyId,
-    required DateTime dateAdded,
-  });
+  Future<Either<Failure, List<appwrite_models.Document>>> getCompanies();
+  Future<Either<Failure, appwrite_models.Document>> getCompanyById(String id);
 }
 
-// You will need to implement the Company model and the concrete API class for Appwrite.
+class CompanyAPI implements ICompanyAPI {
+  final Databases _databases;
+  CompanyAPI({required Databases databases}) : _databases = databases;
+
+  @override
+  Future<Either<Failure, List<appwrite_models.Document>>> getCompanies() async {
+    try {
+      final documents = await _databases.listDocuments(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.companyCollection,
+      );
+      return right(documents.documents);
+    } on AppwriteException catch (e, st) {
+      return left(
+        Failure(
+          e.message ?? 'Some unexpected error occurred',
+          st,
+        ),
+      );
+    } catch (e, st) {
+      return left(Failure(e.toString(), st));
+    }
+  }
+
+  @override
+  Future<Either<Failure, appwrite_models.Document>> getCompanyById(
+      String id) async {
+    try {
+      final document = await _databases.getDocument(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.companyCollection,
+        documentId: id,
+      );
+      return right(document);
+    } on AppwriteException catch (e, st) {
+      return left(
+        Failure(
+          e.message ?? 'Some unexpected error occurred',
+          st,
+        ),
+      );
+    } catch (e, st) {
+      return left(Failure(e.toString(), st));
+    }
+  }
+}
