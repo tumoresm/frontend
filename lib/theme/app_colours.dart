@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 
+const kPrimary = Color.fromRGBO(177, 56, 73, 1);
+const kPrimaryLite = Color.fromRGBO(227, 192, 195, 1);
+const kSecondary = Color.fromRGBO(69, 55, 80, 1);
+const kSecondaryLite = Color.fromRGBO(171, 146, 191, 1);
+const kTertiary = Color.fromRGBO(106, 112, 98, 1);
+const kTertiaryLite = Color.fromRGBO(245, 245, 245, 1);
+const kWhite = Color(0xFFFFFFFF);
+const kEerieBlack = Color.fromRGBO(36, 35, 34, 1);
+const kBlack = Color(0xFF000000);
+const kRed = Color.fromARGB(255, 62, 19, 19);
+
 class Colours {
   static const cardColor = Color.fromRGBO(30, 30, 30, 1);
   static const greenColor = Colors.green;

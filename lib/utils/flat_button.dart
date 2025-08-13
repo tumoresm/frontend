@@ -23,7 +23,7 @@ class FlatButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          fixedSize: const Size(100, 55),
+          fixedSize: const Size(395, 55),
           backgroundColor: Colours.transparentColor,
           shadowColor: Colours.transparentColor,
         ),

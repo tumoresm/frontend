@@ -1,13 +1,13 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:fieldforce/constants/constants.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/model/user_model.dart';
+import 'package:fieldforce/features/auth/model/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final userAPIProvider = Provider<IUserAPI>((ref) {
   return UserAPI(
-    db: ref.watch(appwriteDatabaseProvider),
+    db: ref.watch(appwriteDatabasesProvider),
   );
 });
 
@@ -24,7 +24,7 @@ class UserAPI implements IUserAPI {
     try {
       await _db.createDocument(
         databaseId: AppwriteConstants.databaseId,
-        collectionId: AppwriteConstants.userCollectionId,
+        collectionId: AppwriteConstants.usersCollection,
         documentId: userModel.id,
         data: userModel.toMap(),
       );

@@ -47,8 +47,7 @@ class AuthAPI implements IAuthAPI {
     required String email,
     required String password,
     required String fullName,
-    required String
-        phoneNumber, // Note: Not used in this specific Appwrite call.
+    required String phoneNumber,
   }) async {
     try {
       final user = await _account.create(
