@@ -1,11 +1,9 @@
-import 'package:fieldforce/features/wallet/model/wallet_models.dart';
 import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
 import 'package:fieldforce/features/wallet/view/widgets/wallet_balance_card.dart';
 import 'package:fieldforce/features/wallet/view/widgets/wallet_quick_actions.dart';
 import 'package:fieldforce/features/wallet/view/widgets/transaction_list_widget.dart';
 import 'package:fieldforce/features/wallet/view/widgets/withdrawal_request_dialog.dart';
 import 'package:fieldforce/theme/app_colours.dart';
-import 'package:fieldforce/utils/loading_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
