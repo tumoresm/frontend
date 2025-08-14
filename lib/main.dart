@@ -1,3 +1,4 @@
+import 'package:fieldforce/features/splash/splash_screen.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
@@ -76,7 +77,7 @@ class FieldForceApp extends StatelessWidget {
         return MaterialApp(
           title: 'FieldForce',
           theme: AppTheme.darkThemeMode,
-          home: const AppRouter(),
+          home: const SplashScreen(),
           debugShowCheckedModeBanner: false,
         );
       },
@@ -84,37 +85,7 @@ class FieldForceApp extends StatelessWidget {
   }
 }
 
-// Separate router widget to optimize performance
-class AppRouter extends ConsumerWidget {
-  const AppRouter({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Use a single provider watch to reduce rebuilds
-    final authState = ref.watch(appAuthStateProvider);
-
-    return authState.when(
-      data: (state) {
-        switch (state.status) {
-          case AuthStatus.authenticated:
-            if (state.isProfileComplete) {
-              return const DashBoardController();
-            } else {
-              return const VerificationPage();
-            }
-          case AuthStatus.unauthenticated:
-            return const SignInPage();
-          case AuthStatus.loading:
-            return const LoadingPage();
-        }
-      },
-      loading: () => const LoadingPage(),
-      error: (error, stackTrace) => ErrorPage(
-        error: error.toString(),
-      ),
-    );
-  }
-}
+// AppRouter is now defined in splash_screen.dart
 
 // Combined auth state to reduce provider watchers
 enum AuthStatus { loading, authenticated, unauthenticated }

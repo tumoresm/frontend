@@ -2,9 +2,10 @@ import 'package:fieldforce/common/widgets/profile_menu.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
 import 'package:fieldforce/constants/verification_constants.dart';
+import 'package:fieldforce/theme/theme.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 import 'package:fieldforce/utils/loading_page.dart';
-import 'package:flutter/material.dart' hide FlatButton;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -56,7 +57,8 @@ class UserProfilePage extends ConsumerWidget {
                         user.verificationStatus == VerificationStatus.verified
                             ? Symbols.verified
                             : Symbols.verified_off,
-                        color: user.verificationStatus == VerificationStatus.verified
+                        color: user.verificationStatus ==
+                                VerificationStatus.verified
                             ? Colors.blue
                             : Colors.grey,
                         size: 20,
@@ -79,8 +81,9 @@ class UserProfilePage extends ConsumerWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: user.verificationStatus == VerificationStatus.pending
-                            ? Colors.orange
+                        backgroundColor: user.verificationStatus ==
+                                VerificationStatus.pending
+                            ? Colours.gradient1
                             : Colors.blue,
                         foregroundColor: Colors.white,
                       ),
