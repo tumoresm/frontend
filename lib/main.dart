@@ -1,16 +1,12 @@
 import 'package:fieldforce/features/splash/splash_screen.dart';
-import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
-import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/theme/app_theme.dart';
-import 'package:fieldforce/utils/utilities.dart';
 import 'package:fieldforce/core/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'features/home/controller/dashboard_controller.dart';
 
 // Performance monitoring
 class PerformanceProviderObserver extends ProviderObserver {

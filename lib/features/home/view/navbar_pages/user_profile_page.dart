@@ -124,9 +124,11 @@ class UserProfilePage extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   const Divider(),
                   //Menu ListTiles
+                  const ProfileMenuButton(
+                      title: 'My Portfolio', icon: Symbols.business_center),
                   const ProfileMenuButton(
                       title: 'Settings', icon: Symbols.settings),
                   const ProfileMenuButton(
@@ -134,9 +136,9 @@ class UserProfilePage extends ConsumerWidget {
                   const ProfileMenuButton(
                       title: 'Legal Terms', icon: Symbols.contract_edit),
                   const ProfileMenuButton(title: 'Help', icon: Symbols.help),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   const Divider(),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   FlatButton(
                     onTap: () {
                       ref.read(authControllerProvider.notifier).logout(context);

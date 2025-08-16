@@ -52,9 +52,6 @@ final currentUserDetailsProvider =
 
     Loggers.auth.debug('Current user ID: ${currentUser.$id}');
 
-    // Add a small delay to ensure the session is fully established
-    await Future.delayed(const Duration(milliseconds: 100));
-
     // Fetch user details directly using providers (no auth controller dependency)
     final client = ref.read(appwriteClientProvider);
     final databases = Databases(client);
@@ -82,24 +79,8 @@ final currentUserDetailsProvider =
           .info('UserModel created successfully: ${userModel.email}');
       return userModel;
     } catch (e) {
-      if (e.toString().contains('document_not_found') ||
-          e.toString().contains('404')) {
-        Loggers.database.warning(
-            'User document not found for ${currentUser.$id}, creating missing document');
-
-        // Create missing user document
-        final createdUser = await _createMissingUserDocument(ref, currentUser);
-        if (createdUser != null) {
-          Loggers.database.info('Successfully created missing user document');
-          return createdUser;
-        } else {
-          Loggers.database.error('Failed to create missing user document');
-          return null;
-        }
-      } else {
-        // Re-throw other errors
-        rethrow;
-      }
+        Loggers.database.error('Error fetching user document for ${currentUser.$id}', error: e);
+        return null;
     }
   } catch (e, stackTrace) {
     Loggers.auth.error('Error in currentUserDetailsProvider',
@@ -107,131 +88,6 @@ final currentUserDetailsProvider =
     return null;
   }
 });
-
-/// Helper function to create missing user document with proper permissions
-Future<UserModel?> _createMissingUserDocument(Ref ref, model.User currentUser) async {
-  try {
-    // Initialize secure client and set current user context
-    SecureAppwriteClient.initialize();
-    SecureAppwriteClient.setCurrentUserId(currentUser.$id);
-    
-    // Get current session to set in secure client
-    try {
-      final account = ref.read(appwriteAccountProvider);
-      final sessions = await account.listSessions();
-      if (sessions.sessions.isNotEmpty) {
-        SecureAppwriteClient.setSession(sessions.sessions.first.$id);
-        Loggers.database.debug('Set session in secure client for document creation');
-      }
-    } catch (sessionError) {
-      Loggers.database.warning('Could not set session in secure client', error: sessionError);
-    }
-
-    // Create basic user document with available information
-    final userData = {
-      'email': currentUser.email,
-      'fullName':
-          currentUser.name.isNotEmpty ? currentUser.name : 'Unknown User',
-      'phoneNumber': currentUser.phone.isNotEmpty ? currentUser.phone : '',
-      'role': 'Rep', // Default role
-      'address': '',
-      'idDocumentUrl': '',
-      'profileImageUrl': '',
-      'verificationStatus': VerificationStatus.unverified,
-      'myCompaniesPortfolio': [],
-      'createdAt': DateTime.now().toIso8601String(),
-      'updatedAt': DateTime.now().toIso8601String(),
-    };
-
-    Loggers.database
-        .info('Creating missing user document for ${currentUser.email}');
-
-    // Create user-specific permissions for the document
-    final permissions = [
-      Permission.read(Role.user(currentUser.$id)),
-      Permission.update(Role.user(currentUser.$id)),
-      Permission.delete(Role.user(currentUser.$id)),
-      Permission.read(Role.users()), // Allow other authenticated users to read basic info
-    ];
-
-    // Use secure client to create document with proper permissions
-    final document = await SecureAppwriteClient.createDocumentWithPermissions(
-      databaseId: AppwriteConstants.databaseId,
-      collectionId: AppwriteConstants.usersCollection,
-      documentId: currentUser.$id, // Use the auth user ID as document ID
-      data: userData,
-      permissions: permissions,
-    );
-
-    Loggers.database.info('User document created successfully with secure client');
-
-    // Convert to UserModel
-    final dataWithId = Map<String, dynamic>.from(document.data);
-    dataWithId['\$id'] = document.$id;
-
-    return UserModel.fromMap(dataWithId);
-  } catch (e) {
-    Loggers.database.error('Failed to create missing user document with secure client', error: e);
-    
-    // If secure client fails, try fallback approach with basic client
-    return await _createMissingUserDocumentFallback(ref, currentUser);
-  }
-}
-
-/// Fallback method to create user document with basic client
-Future<UserModel?> _createMissingUserDocumentFallback(Ref ref, model.User currentUser) async {
-  try {
-    Loggers.database.info('Attempting fallback user document creation');
-    
-    final client = ref.read(appwriteClientProvider);
-    final databases = Databases(client);
-
-    // Create basic user document with available information
-    final userData = {
-      'email': currentUser.email,
-      'fullName':
-          currentUser.name.isNotEmpty ? currentUser.name : 'Unknown User',
-      'phoneNumber': currentUser.phone.isNotEmpty ? currentUser.phone : '',
-      'role': 'Rep', // Default role
-      'address': '',
-      'idDocumentUrl': '',
-      'profileImageUrl': '',
-      'verificationStatus': VerificationStatus.unverified,
-      'myCompaniesPortfolio': [],
-      'createdAt': DateTime.now().toIso8601String(),
-      'updatedAt': DateTime.now().toIso8601String(),
-    };
-
-    Loggers.database
-        .info('Creating missing user document (fallback) for ${currentUser.email}');
-
-    final document = await databases.createDocument(
-      databaseId: AppwriteConstants.databaseId,
-      collectionId: AppwriteConstants.usersCollection,
-      documentId: currentUser.$id, // Use the auth user ID as document ID
-      data: userData,
-    );
-
-    Loggers.database.info('User document created successfully with fallback method');
-
-    // Convert to UserModel
-    final dataWithId = Map<String, dynamic>.from(document.data);
-    dataWithId['\$id'] = document.$id;
-
-    return UserModel.fromMap(dataWithId);
-  } catch (e) {
-    Loggers.database.error('Fallback user document creation also failed', error: e);
-    
-    // Log specific error details for debugging
-    if (e.toString().contains('user_unauthorized') || e.toString().contains('401')) {
-      Loggers.database.error('PERMISSION ISSUE: The users collection needs proper permissions configured.');
-      Loggers.database.error('Please check Appwrite Console → Database → users collection → Settings → Permissions');
-      Loggers.database.error('Required permissions: Create: "users" or "user:[USER_ID]"');
-    }
-    
-    return null;
-  }
-}
 
 /// ✅ FIX: Independent provider that fetches user details by ID
 final userDetailsProvider =
@@ -380,11 +236,6 @@ class AuthController extends StateNotifier<bool> {
     required String password,
     required String fullName,
     required String phoneNumber,
-    String idDocumentUrl = '', // ✅ OPTIONAL with default
-    String role = 'Rep', // ✅ OPTIONAL with default
-    String address = '', // ✅ OPTIONAL with default
-    String profileImageUrl = '', // ✅ OPTIONAL with default
-    List<String> myCompaniesPortfolio = const <String>[],
     required BuildContext context,
   }) async {
     state = true;
@@ -393,11 +244,6 @@ class AuthController extends StateNotifier<bool> {
       password: password,
       fullName: fullName,
       phoneNumber: phoneNumber,
-      idDocumentUrl: idDocumentUrl.isEmpty ? '' : idDocumentUrl,
-      role: role,
-      address: address.isEmpty ? '' : address,
-      profileImageUrl: profileImageUrl.isEmpty ? '' : profileImageUrl,
-      myCompaniesPortfolio: myCompaniesPortfolio,
     );
     state = false; // Reset loading state
 
@@ -408,8 +254,7 @@ class AuthController extends StateNotifier<bool> {
         }
         return false; // Return false on error
       },
-      (r) async {
-        // Skip email verification for now to avoid signup issues
+      (r) {
         if (context.mounted) {
           showSnackBar(context,
               'Account created successfully! You can now sign in.');
@@ -832,23 +677,43 @@ class AuthController extends StateNotifier<bool> {
   }
 
   void logout(BuildContext context) async {
-    final res = await _authRepository.logout();
-    res.fold(
-      (l) {
-        if (context.mounted) {
-          showSnackBar(context, l.message);
-        }
-      },
-      (r) {
-        if (context.mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            SignInPage.route(),
-            (route) => false,
-          );
-        }
-      },
+    final res = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Your session will be deleted. Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
     );
+
+    if (res == true) {
+      final res = await _authRepository.logout();
+      res.fold(
+        (l) {
+          if (context.mounted) {
+            showSnackBar(context, l.message);
+          }
+        },
+        (r) {
+          if (context.mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              SignInPage.route(),
+              (route) => false,
+            );
+          }
+        },
+      );
+    }
   }
 
   Future<void> forgotPassword({required String email, required BuildContext context}) async {

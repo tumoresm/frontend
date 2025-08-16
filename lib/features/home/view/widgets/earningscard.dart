@@ -8,22 +8,20 @@ class EarningsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 160,
-        width: 350,
+        height: 100,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Column(children: [
             Expanded(
-              flex: 2,
               child: Container(
                 color: kBlack,
                 child: const Stack(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(14.0),
+                      padding: EdgeInsets.all(10.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Column(
                             children: [
@@ -34,13 +32,13 @@ class EarningsCard extends StatelessWidget {
                                   Text('Total Earnings')
                                 ],
                               ),
-                              SizedBox(height: 25),
+                              SizedBox(height: 15),
                               //TODO fetch and display the Total Amount Earned by Rep here
                               Text(
                                 'R25,058.00',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
                                 ),
                               )
                             ],
@@ -59,15 +57,13 @@ class EarningsCard extends StatelessWidget {
                                   Text('Total Paid')
                                 ],
                               ),
-                              SizedBox(
-                                height: 25,
-                              ),
+                              SizedBox(height: 15),
                               //TODO fetch and display the Total Amount Paid to Rep here
                               Text(
                                 'R10,200.00',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
                                 ),
                               )
                             ],

@@ -1,8 +1,9 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:fieldforce/constants/assets_constants.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
-import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
+import 'package:fieldforce/main.dart';
 import 'package:fieldforce/theme/app_colours.dart';
 import 'package:fieldforce/utils/utilities.dart';
 import 'package:fieldforce/core/logger.dart';
@@ -21,24 +22,27 @@ class SplashScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Lottie animation
-          Expanded(
-            flex: 3,
-            child: Lottie.asset(
-              'assets/anime/sales_trackerSplash.json',
-              fit: BoxFit.contain,
-              repeat: true,
-              reverse: false,
-              animate: true,
+          Padding(
+            padding: const EdgeInsets.only(right: 32),
+            child: Expanded(
+              flex: 3,
+              child: Lottie.asset(
+                AssetsConstants.animeSplash,
+                fit: BoxFit.contain,
+                repeat: true,
+                reverse: false,
+                animate: true,
+              ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           // App title
           const Text(
             'FieldForce',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Colours.whiteColor,
+              color: kPrimary,
               letterSpacing: 2.0,
             ),
           ),
@@ -59,7 +63,7 @@ class SplashScreen extends ConsumerWidget {
             height: 30,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colours.primaryColour),
+              valueColor: AlwaysStoppedAnimation<Color>(Colours.gradient1),
             ),
           ),
           const Spacer(),
@@ -70,7 +74,7 @@ class SplashScreen extends ConsumerWidget {
       duration: 3000, // 3 seconds
       splashTransition: SplashTransition.fadeTransition,
       pageTransitionType: PageTransitionType.fade,
-      backgroundColor: Colours.backgroundColour,
+      backgroundColor: Colours.whiteColor,
       animationDuration: const Duration(milliseconds: 1000),
     );
   }
@@ -88,14 +92,16 @@ class AppRouter extends ConsumerWidget {
     return authState.when(
       data: (state) {
         Loggers.config.info('Auth state: ${state.status}');
-        
+
         switch (state.status) {
           case AuthStatus.authenticated:
             if (state.isProfileComplete) {
-              Loggers.config.info('User authenticated and profile complete - navigating to dashboard');
+              Loggers.config.info(
+                  'User authenticated and profile complete - navigating to dashboard');
               return const DashBoardController();
             } else {
-              Loggers.config.info('User authenticated but profile incomplete - navigating to verification');
+              Loggers.config.info(
+                  'User authenticated but profile incomplete - navigating to verification');
               return const VerificationPage();
             }
           case AuthStatus.unauthenticated:
@@ -107,11 +113,13 @@ class AppRouter extends ConsumerWidget {
         }
       },
       loading: () {
-        Loggers.config.info('Auth state provider loading - showing loading page');
+        Loggers.config
+            .info('Auth state provider loading - showing loading page');
         return const LoadingPage();
       },
       error: (error, stackTrace) {
-        Loggers.config.error('Auth state error: $error', error: error, stackTrace: stackTrace);
+        Loggers.config.error('Auth state error: $error',
+            error: error, stackTrace: stackTrace);
         return ErrorPage(
           error: error.toString(),
         );
@@ -127,7 +135,7 @@ class EnhancedLoadingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colours.backgroundColour,
+      backgroundColor: Colours.backgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +165,7 @@ class EnhancedLoadingPage extends StatelessWidget {
               height: 40,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(Colours.primaryColour),
+                valueColor: AlwaysStoppedAnimation<Color>(Colours.gradient1),
               ),
             ),
           ],
