@@ -2,7 +2,7 @@ import 'package:fieldforce/utils/custom_field.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
-import 'package:flutter/material.dart' hide FlatButton;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class VerificationPage extends ConsumerStatefulWidget {

@@ -1,4 +1,4 @@
-import 'package:fieldforce/common/widgets/common_exports.dart';
+import 'package:fieldforce/common/widgets/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';

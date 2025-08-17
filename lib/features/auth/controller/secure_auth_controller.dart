@@ -26,37 +26,40 @@ final secureCurrentUserProvider = FutureProvider((ref) {
 });
 
 /// Provides the full [UserModel] details for the currently logged-in user with security
-final secureCurrentUserDetailsProvider = FutureProvider<UserModel?>((ref) async {
+final secureCurrentUserDetailsProvider =
+    FutureProvider<UserModel?>((ref) async {
   try {
     // Get the auth controller to check current user
     final authController = ref.read(secureAuthControllerProvider.notifier);
-    
+
     // Get current user from Appwrite directly
     final currentUser = await authController.getCurrentUser();
-    
+
     if (currentUser == null) {
       Loggers.auth.debug('No current user found');
       return null;
     }
-    
+
     Loggers.auth.debug('Current user ID: ${currentUser.$id}');
-    
+
     // Set the user ID in secure client
     SecureAppwriteClient.setCurrentUserId(currentUser.$id);
-    
+
     // Add a small delay to ensure the session is fully established
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     // Fetch user details from database using secure client
     return await authController.getUserDataSecure(currentUser.$id);
   } catch (e, stackTrace) {
-    Loggers.auth.error('Error in secureCurrentUserDetailsProvider', error: e, stackTrace: stackTrace);
+    Loggers.auth.error('Error in secureCurrentUserDetailsProvider',
+        error: e, stackTrace: stackTrace);
     Loggers.auth.debug('Error type: ${e.runtimeType}');
     return null;
   }
 });
 
-final secureUserDetailsProvider = FutureProvider.family<UserModel?, String>((ref, String uid) {
+final secureUserDetailsProvider =
+    FutureProvider.family<UserModel?, String>((ref, String uid) {
   final authController = ref.watch(secureAuthControllerProvider.notifier);
   return authController.getUserDataSecure(uid);
 });
@@ -80,55 +83,64 @@ class SecureAuthController extends StateNotifier<bool> {
   Future<UserModel?> getUserDataSecure(String uid) async {
     try {
       Loggers.database.debug('Fetching user data securely for UID: $uid');
-      
+
       // Use secure client to get user document
       final document = await SecureAppwriteClient.getDocumentSecure(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.usersCollection,
         documentId: uid,
       );
-      
+
       Loggers.database.debug('Document received successfully');
       Loggers.database.debug('Document ID: ${document.$id}');
-      Loggers.database.debug('Document data type: ${document.data.runtimeType}');
-      
+      Loggers.database
+          .debug('Document data type: ${document.data.runtimeType}');
+
       // Safely access document data
       final data = document.data;
       if (data.isEmpty) {
         Loggers.database.warning('Document data is empty for user $uid');
         return null;
       }
-      
+
       Loggers.database.debug('Document data keys: ${data.keys.toList()}');
       Loggers.database.debug('Document data: $data');
-      
+
       // Add the document ID to the data for UserModel creation
       final dataWithId = Map<String, dynamic>.from(data);
       dataWithId['\$id'] = document.$id;
-      
+
       final updatedUser = UserModel.fromMap(dataWithId);
-      Loggers.database.info('UserModel created successfully: ${updatedUser.email}');
+      Loggers.database
+          .info('UserModel created successfully: ${updatedUser.email}');
       return updatedUser;
     } catch (e, stackTrace) {
       // Handle all errors generically to avoid nullable type issues
-      Loggers.database.error('Error in getUserDataSecure', error: e, stackTrace: stackTrace);
+      Loggers.database.error('Error in getUserDataSecure',
+          error: e, stackTrace: stackTrace);
       Loggers.database.debug('Error type: ${e.runtimeType}');
-      
+
       // Provide more specific error handling
-      if (e.toString().contains('document_not_found') || e.toString().contains('404')) {
+      if (e.toString().contains('document_not_found') ||
+          e.toString().contains('404')) {
         Loggers.database.warning('Document not found for user $uid');
-        Loggers.database.info('This usually means the user document was not created during registration');
-      } else if (e.toString().contains('401') || e.toString().contains('unauthorized')) {
+        Loggers.database.info(
+            'This usually means the user document was not created during registration');
+      } else if (e.toString().contains('401') ||
+          e.toString().contains('unauthorized')) {
         Loggers.database.warning('Unauthorized access to user document');
-        Loggers.database.info('This usually means the user session is invalid or expired');
+        Loggers.database
+            .info('This usually means the user session is invalid or expired');
       } else if (e.toString().contains('Access denied')) {
         Loggers.database.warning('Access denied to user document');
         Loggers.database.info('User can only access their own data');
       } else if (e.toString().contains('LateInitializationError')) {
-        Loggers.database.warning('This appears to be a LateInitializationError');
-        Loggers.database.warning('This suggests a late variable in Appwrite Document class is not initialized');
+        Loggers.database
+            .warning('This appears to be a LateInitializationError');
+        Loggers.database.warning(
+            'This suggests a late variable in Appwrite Document class is not initialized');
       }
-      
+
       return null; // Return null instead of rethrowing to prevent app crash
     }
   }
@@ -138,32 +150,26 @@ class SecureAuthController extends StateNotifier<bool> {
     required String password,
     required String fullName,
     required String phoneNumber,
-    required String idDocumentUrl,
-    required String role,
-    required String address,
-    required String profileImageUrl,
-    List<String> myCompaniesPortfolio = const <String>[],
+    required String? selectedAvatar,
     required BuildContext context,
   }) async {
     state = true;
-    
+
     // Update auth state
-    _ref.read(SecureProviders.authStateProvider.notifier).setAuthState(AuthState.authenticating);
-    
+    _ref
+        .read(SecureProviders.authStateProvider.notifier)
+        .setAuthState(AuthState.authenticating);
+
     final res = await _authRepository.signUp(
       email: email,
       password: password,
       fullName: fullName,
       phoneNumber: phoneNumber,
-      idDocumentUrl: idDocumentUrl,
-      role: role,
-      address: address,
-      profileImageUrl: profileImageUrl,
-      myCompaniesPortfolio: [],
+      selectedAvatar: selectedAvatar,
     );
-    
-    state = false;  // Reset loading state
-    
+
+    state = false; // Reset loading state
+
     res.fold(
       (l) {
         _ref.read(SecureProviders.authStateProvider.notifier).onAuthFailure();
@@ -182,17 +188,19 @@ class SecureAuthController extends StateNotifier<bool> {
     required BuildContext context,
   }) async {
     state = true;
-    
+
     // Update auth state
-    _ref.read(SecureProviders.authStateProvider.notifier).setAuthState(AuthState.authenticating);
-    
+    _ref
+        .read(SecureProviders.authStateProvider.notifier)
+        .setAuthState(AuthState.authenticating);
+
     final res = await _authRepository.signIn(
       email: email,
       password: password,
     );
-    
+
     state = false;
-    
+
     res.fold(
       (l) {
         _ref.read(SecureProviders.authStateProvider.notifier).onAuthFailure();
@@ -200,44 +208,49 @@ class SecureAuthController extends StateNotifier<bool> {
       },
       (r) async {
         showSnackBar(context, 'Sign in successful!');
-        
-        Loggers.navigation.info('Sign-in successful, preparing secure navigation...');
-        
+
+        Loggers.navigation
+            .info('Sign-in successful, preparing secure navigation...');
+
         try {
           // Get current user to set up secure client
           final currentUser = await getCurrentUser();
           if (currentUser != null) {
             // Set up secure client with user session
             _ref.read(SecureProviders.authStateProvider.notifier).onAuthSuccess(
-              currentUser.$id,
-              r.$id, // session ID
-            );
-            
-            Loggers.auth.info('Secure client configured for user: ${currentUser.$id}');
+                  currentUser.$id,
+                  r.$id, // session ID
+                );
+
+            Loggers.auth
+                .info('Secure client configured for user: ${currentUser.$id}');
           }
         } catch (e) {
           Loggers.auth.error('Failed to configure secure client', error: e);
         }
-        
+
         // Wait a moment for the session to be established
         await Future.delayed(const Duration(milliseconds: 300));
-        
+
         // Simple, reliable navigation
         if (context.mounted) {
           Loggers.navigation.info('Navigating to dashboard...');
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => const DashBoardController()),
+            MaterialPageRoute(
+                builder: (context) => const DashBoardController()),
             (route) => false,
           );
           Loggers.navigation.info('Navigation completed');
         } else {
-          Loggers.navigation.warning('Context not mounted, scheduling navigation for next frame');
+          Loggers.navigation.warning(
+              'Context not mounted, scheduling navigation for next frame');
           SchedulerBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => const DashBoardController()),
+                MaterialPageRoute(
+                    builder: (context) => const DashBoardController()),
                 (route) => false,
               );
             }
@@ -249,13 +262,13 @@ class SecureAuthController extends StateNotifier<bool> {
 
   void logout(BuildContext context) async {
     final res = await _authRepository.logout();
-    
+
     res.fold(
       (l) => showSnackBar(context, l.message),
       (r) {
         // Clear secure client session
         _ref.read(SecureProviders.authStateProvider.notifier).onLogout();
-        
+
         Navigator.pushAndRemoveUntil(
           context,
           SignInPage.route(),

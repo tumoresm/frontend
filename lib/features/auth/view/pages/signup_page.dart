@@ -3,6 +3,7 @@ import 'package:fieldforce/utils/custom_field.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
+import 'package:fieldforce/common/widgets/avatar_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,6 +23,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final TextEditingController _phoneController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+  String? _selectedAvatar; // Store selected avatar ID
 
   @override
   void dispose() {
@@ -50,26 +52,24 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             password: password,
             fullName: fullName,
             phoneNumber: phoneNumber,
-            // Optional fields will be completed in verification page
-            // No need to pass empty strings as they have defaults
             context: context,
           );
 
       // Only navigate if the widget is still mounted and signup was successful
       if (mounted && success) {
-        // Show success message and navigate to sign in
+        // Show success message and navigate to email verification
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'Account created! Please sign in to complete your profile.'),
+                'Account created! Please check your email for a verification code.'),
             duration: Duration(seconds: 3),
           ),
         );
 
-        // Navigate to sign in page
+        // Navigate to email verification page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SignInPage()),
+          MaterialPageRoute(builder: (context) => const EmailVerificationPage()),
         );
       }
     }
@@ -102,6 +102,19 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 'Enter your basic information to get started',
                 style: TextStyle(fontSize: 16),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Avatar Selector
+              Center(
+                child: AvatarSelector(
+                  selectedAvatar: _selectedAvatar,
+                  onAvatarSelected: (avatarId) {
+                    setState(() {
+                      _selectedAvatar = avatarId;
+                    });
+                  },
+                  size: 100,
+                ),
               ),
               const SizedBox(height: 24),
               CustomTextField(

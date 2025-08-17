@@ -1,4 +1,4 @@
-import 'package:fieldforce/common/widgets/profile_menu.dart';
+import 'package:fieldforce/common/widgets/common_widgets.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
 import 'package:fieldforce/constants/verification_constants.dart';
@@ -8,6 +8,7 @@ import 'package:fieldforce/utils/loading_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:fieldforce/common/widgets/avatar_selector.dart';
 
 class UserProfilePage extends ConsumerWidget {
   const UserProfilePage({super.key});
@@ -32,15 +33,14 @@ class UserProfilePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Center(
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: user.profileImageUrl != null
-                          ? NetworkImage(user.profileImageUrl!)
-                          : null, // Placeholder for default image
-                      child: user.profileImageUrl == null
-                          ? const Icon(Icons.person, size: 50)
-                          : null,
-                    ),
+                    child: user.profileImageUrl != null &&
+                            user.profileImageUrl!.isNotEmpty
+                        ? CircleAvatar(
+                            radius: 50,
+                            backgroundImage:
+                                NetworkImage(user.profileImageUrl!),
+                          )
+                        : getAvatarFromId(user.selectedAvatar, size: 100),
                   ),
                   const SizedBox(height: 10),
                   Row(

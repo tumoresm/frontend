@@ -27,6 +27,7 @@ class AuthRepository {
     required String password,
     required String fullName,
     required String phoneNumber,
+    required String? selectedAvatar,
   }) async {
     return _fastapiAPI.registerUser(
       email: email,
@@ -40,7 +41,10 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    return await _authAPI.signIn(email: email, password: password);
+    return await _authAPI.signIn(
+      email: email,
+      password: password,
+    );
   }
 
   Future<model.User?> currentUser() => _authAPI.getCurrentUser();

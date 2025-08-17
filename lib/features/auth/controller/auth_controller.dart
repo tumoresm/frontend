@@ -1,16 +1,13 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
 import 'package:fieldforce/features/auth/controller/auth_repository.dart';
-import 'package:fieldforce/constants/appwrite_constants.dart';
-import 'package:fieldforce/constants/verification_constants.dart';
+import 'package:fieldforce/constants/constants.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
 import 'package:fieldforce/features/auth/model/user_model.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
 import 'package:fieldforce/core/providers.dart';
-import 'package:fieldforce/core/secure_client.dart';
 import 'package:fieldforce/core/utils.dart';
 import 'package:fieldforce/core/logger.dart';
-import 'package:fieldforce/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -79,8 +76,10 @@ final currentUserDetailsProvider =
           .info('UserModel created successfully: ${userModel.email}');
       return userModel;
     } catch (e) {
-        Loggers.database.error('Error fetching user document for ${currentUser.$id}', error: e);
-        return null;
+      Loggers.database.error(
+          'Error fetching user document for ${currentUser.$id}',
+          error: e);
+      return null;
     }
   } catch (e, stackTrace) {
     Loggers.auth.error('Error in currentUserDetailsProvider',
@@ -127,8 +126,8 @@ final isProfileCompleteProvider = FutureProvider.autoDispose<bool>((ref) async {
 
   // Check if essential profile fields are filled
   return userDetails.address.isNotEmpty &&
-      userDetails.idDocumentUrl != null &&
-      userDetails.idDocumentUrl!.isNotEmpty;
+      userDetails.idNumber != null &&
+      userDetails.idNumber!.isNotEmpty;
 });
 
 class AuthController extends StateNotifier<bool> {
@@ -236,6 +235,7 @@ class AuthController extends StateNotifier<bool> {
     required String password,
     required String fullName,
     required String phoneNumber,
+    required String? selectedAvatar,
     required BuildContext context,
   }) async {
     state = true;
@@ -244,6 +244,7 @@ class AuthController extends StateNotifier<bool> {
       password: password,
       fullName: fullName,
       phoneNumber: phoneNumber,
+      selectedAvatar: selectedAvatar,
     );
     state = false; // Reset loading state
 
@@ -257,7 +258,11 @@ class AuthController extends StateNotifier<bool> {
       (r) {
         if (context.mounted) {
           showSnackBar(context,
-              'Account created successfully! You can now sign in.');
+              'Account created successfully! Please check your email for a verification code.');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const EmailVerificationPage()),
+          );
         }
         return true; // Return true on success
       },
@@ -272,12 +277,13 @@ class AuthController extends StateNotifier<bool> {
       Loggers.auth.info('Attempting to send email verification...');
       Loggers.auth.debug('Appwrite Endpoint: ${AppwriteConstants.endPoint}');
       Loggers.auth.debug('Project ID: ${AppwriteConstants.projectId}');
-      Loggers.auth.debug('Using SMTP Provider ID: ${AppwriteConstants.smtpProviderId}');
+      Loggers.auth
+          .debug('Using SMTP Provider ID: ${AppwriteConstants.smtpProviderId}');
 
       // Verify user is authenticated before sending verification
       final currentUser = await account.get();
       Loggers.auth.info('Sending verification for user: ${currentUser.email}');
-      
+
       // Check if user is already verified
       if (currentUser.emailVerification) {
         Loggers.auth.info('User email is already verified');
@@ -294,9 +300,11 @@ class AuthController extends StateNotifier<bool> {
       Loggers.auth.debug('Error details: ${e.toString()}');
 
       // Log specific error information for debugging
-      if (e.toString().contains('smtp_disabled') || e.toString().contains('general_smtp_disabled')) {
+      if (e.toString().contains('smtp_disabled') ||
+          e.toString().contains('general_smtp_disabled')) {
         Loggers.auth.error('SMTP is disabled in Appwrite configuration');
-        Loggers.auth.error('Please check your Appwrite Console → Settings → SMTP');
+        Loggers.auth
+            .error('Please check your Appwrite Console → Settings → SMTP');
         Loggers.auth.error('Ensure SMTP is enabled and properly configured');
       } else if (e.toString().contains('invalid_url')) {
         Loggers.auth.error('Invalid verification URL provided');
@@ -342,7 +350,8 @@ class AuthController extends StateNotifier<bool> {
 
       if (useFunction) {
         // Try FastAPI server first
-        Loggers.database.info('Attempting profile update via FastAPI server...');
+        Loggers.database
+            .info('Attempting profile update via FastAPI server...');
         try {
           success = await _updateProfileViaAPI(
             userId: userId,
@@ -351,11 +360,12 @@ class AuthController extends StateNotifier<bool> {
             profileImageUrl: profileImageUrl,
             role: role,
           );
-          
+
           if (success) {
             Loggers.database.info('Profile update via API successful');
           } else {
-            Loggers.database.warning('API update returned false, falling back to direct update');
+            Loggers.database.warning(
+                'API update returned false, falling back to direct update');
           }
         } catch (e) {
           Loggers.database.warning(
@@ -363,7 +373,7 @@ class AuthController extends StateNotifier<bool> {
               error: e);
           success = false;
         }
-        
+
         // If API failed, fall back to direct database update
         if (!success) {
           Loggers.database.info('Falling back to direct database update...');
@@ -374,9 +384,10 @@ class AuthController extends StateNotifier<bool> {
             profileImageUrl: profileImageUrl,
             role: role,
           );
-          
+
           if (success) {
-            Loggers.database.info('Profile update via direct database successful');
+            Loggers.database
+                .info('Profile update via direct database successful');
           }
         }
       } else {
@@ -432,10 +443,9 @@ class AuthController extends StateNotifier<bool> {
     try {
       Loggers.database
           .info('Updating profile via FastAPI server for user: $userId');
-      
+
       final endpoint = ApiConstants.updateProfileEndpoint(userId);
-      Loggers.database
-          .debug('FastAPI endpoint: $endpoint');
+      Loggers.database.debug('FastAPI endpoint: $endpoint');
 
       // Get current user session for authentication
       final account = _ref.read(appwriteAccountProvider);
@@ -476,23 +486,28 @@ class AuthController extends StateNotifier<bool> {
         String errorMessage = 'Unknown error';
         try {
           final errorData = jsonDecode(response.body);
-          errorMessage = errorData['detail'] ?? errorData['message'] ?? 'Unknown error';
+          errorMessage =
+              errorData['detail'] ?? errorData['message'] ?? 'Unknown error';
         } catch (e) {
           errorMessage = 'HTTP ${response.statusCode}: ${response.body}';
         }
-        
+
         Loggers.database.error('API profile update failed: $errorMessage');
-        
+
         // Log specific error guidance
         if (response.statusCode == 404) {
-          Loggers.database.error('ENDPOINT NOT FOUND: The FastAPI server is missing the /users/profile/update endpoint');
-          Loggers.database.error('Check SERVER_SIDE_FIX_GUIDE.md for server configuration instructions');
+          Loggers.database.error(
+              'ENDPOINT NOT FOUND: The FastAPI server is missing the /users/profile/update endpoint');
+          Loggers.database.error(
+              'Check SERVER_SIDE_FIX_GUIDE.md for server configuration instructions');
         } else if (response.statusCode == 405) {
-          Loggers.database.error('METHOD NOT ALLOWED: The endpoint exists but doesn\'t accept PUT requests');
+          Loggers.database.error(
+              'METHOD NOT ALLOWED: The endpoint exists but doesn\'t accept PUT requests');
         } else if (response.statusCode == 422) {
-          Loggers.database.error('VALIDATION ERROR: The request data format is incorrect');
+          Loggers.database
+              .error('VALIDATION ERROR: The request data format is incorrect');
         }
-        
+
         return false;
       }
     } catch (e) {
@@ -572,7 +587,8 @@ class AuthController extends StateNotifier<bool> {
       },
       (r) async {
         // Skip email verification check for now
-        Loggers.auth.info('Sign-in successful, skipping email verification check');
+        Loggers.auth
+            .info('Sign-in successful, skipping email verification check');
 
         if (context.mounted) {
           showSnackBar(context, 'Sign in successful!');
@@ -681,7 +697,8 @@ class AuthController extends StateNotifier<bool> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Logout'),
-        content: const Text('Your session will be deleted. Are you sure you want to logout?'),
+        content: const Text(
+            'Your session will be deleted. Are you sure you want to logout?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -716,7 +733,8 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  Future<void> forgotPassword({required String email, required BuildContext context}) async {
+  Future<void> forgotPassword(
+      {required String email, required BuildContext context}) async {
     state = true;
     final res = await _authRepository.forgotPassword(email: email);
     state = false;

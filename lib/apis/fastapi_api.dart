@@ -15,6 +15,7 @@ abstract class IFastAPIApi {
     required String password,
     required String fullName,
     required String phoneNumber,
+    String? selectedAvatar,
   });
 }
 
@@ -25,6 +26,7 @@ class FastAPIApi implements IFastAPIApi {
     required String password,
     required String fullName,
     required String phoneNumber,
+    String? selectedAvatar,
   }) async {
     try {
       final endpoint = ApiConstants.registerEndpoint;
@@ -36,6 +38,7 @@ class FastAPIApi implements IFastAPIApi {
           'password': password,
           'name': fullName,
           'phone': phoneNumber,
+          if (selectedAvatar != null) 'selectedAvatar': selectedAvatar,
         }),
       );
 
