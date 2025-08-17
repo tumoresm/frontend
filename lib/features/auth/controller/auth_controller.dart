@@ -2,6 +2,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
 import 'package:fieldforce/features/auth/controller/auth_repository.dart';
 import 'package:fieldforce/constants/constants.dart';
+import 'package:fieldforce/features/auth/view/pages/email_verification_page.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
 import 'package:fieldforce/features/auth/model/user_model.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
@@ -261,7 +262,8 @@ class AuthController extends StateNotifier<bool> {
               'Account created successfully! Please check your email for a verification code.');
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const EmailVerificationPage()),
+            MaterialPageRoute(
+                builder: (context) => const EmailVerificationPage()),
           );
         }
         return true; // Return true on success
@@ -323,8 +325,8 @@ class AuthController extends StateNotifier<bool> {
   Future<bool> updateUserProfile({
     required String userId,
     required String address,
-    required String idDocumentUrl,
-    required String profileImageUrl,
+    required String idNumber,
+    required File? profileImage,
     required String role,
     required BuildContext context,
     bool useFunction = true, // Flag to use FastAPI server or direct DB update
@@ -339,9 +341,214 @@ class AuthController extends StateNotifier<bool> {
         return false;
       }
 
-      if (idDocumentUrl.trim().isEmpty) {
+      if (idNumber.trim().isEmpty) {
         if (context.mounted) {
-          showSnackBar(context, 'ID Document URL is required.');
+          showSnackBar(context, 'ID Number is required.');
+        }
+        return false;
+      }
+
+      // Validate ID Number format (12 digits)
+      if (!RegExp(r'^\d{12}
+
+  /// Refreshes user data by invalidating providers
+  void refreshUserData() {
+    // ✅ FIX: Remove provider invalidation to avoid circular dependency
+    // Providers will refresh automatically when accessed
+    Loggers.auth
+        .info('refreshUserData called - providers will refresh on next access');
+    Loggers.auth
+        .info('No manual invalidation needed to avoid circular dependency');
+  }
+
+  void signIn({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    state = true;
+    final res = await _authRepository.signIn(
+      email: email,
+      password: password,
+    );
+    state = false;
+    res.fold(
+      (l) {
+        if (context.mounted) {
+          showSnackBar(context, l.message);
+        }
+      },
+      (r) async {
+        // Skip email verification check for now
+        Loggers.auth
+            .info('Sign-in successful, skipping email verification check');
+
+        if (context.mounted) {
+          showSnackBar(context, 'Sign in successful!');
+        }
+
+        Loggers.navigation.info('Sign-in successful, preparing navigation...');
+
+        // Wait a moment for the session to be established
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        // ✅ FIX: Verify user document exists after sign-in
+        try {
+          final userDetails =
+              await _ref.read(currentUserDetailsProvider.future);
+          if (userDetails == null) {
+            Loggers.auth.warning(
+                'User document not found after sign-in, but continuing...');
+            // The provider will handle creating the missing document
+          } else {
+            Loggers.auth.info('User document verified: ${userDetails.email}');
+          }
+        } catch (e) {
+          Loggers.auth.warning('Could not verify user document after sign-in',
+              error: e);
+          // Continue anyway, the provider will handle it
+        }
+
+        // ✅ FIX: Remove provider invalidation to avoid circular dependency
+        // Providers will refresh automatically when the underlying session changes
+        Loggers.navigation.info(
+            'Skipping provider invalidation to avoid circular dependency');
+        Loggers.navigation
+            .info('Providers will refresh automatically on next access');
+
+        // ✅ FIX: Direct navigation to dashboard to bypass main.dart routing issues
+        if (context.mounted) {
+          Loggers.navigation.info('Navigating directly to dashboard...');
+          // Navigate directly to dashboard instead of relying on main.dart routing
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const DashBoardController()),
+            (route) => false,
+          );
+          Loggers.navigation.info('Direct navigation to dashboard completed');
+        } else {
+          Loggers.navigation.warning(
+              'Context not mounted, scheduling navigation for next frame');
+          SchedulerBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const DashBoardController()),
+                (route) => false,
+              );
+              Loggers.navigation
+                  .info('Delayed direct navigation to dashboard completed');
+            }
+          });
+        }
+      },
+    );
+  }
+
+  /// Shows dialog to resend email verification
+  void _showResendVerificationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Email Verification Required'),
+        content: const Text(
+            'Please verify your email address to continue. Would you like us to resend the verification email?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+              try {
+                await _sendEmailVerification();
+                if (context.mounted) {
+                  showSnackBar(context,
+                      'Verification email sent! Please check your inbox.');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  showSnackBar(context,
+                      'Failed to send verification email. Please try again.');
+                }
+              }
+            },
+            child: const Text('Resend'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void logout(BuildContext context) async {
+    final res = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text(
+            'Your session will be deleted. Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (res == true) {
+      final res = await _authRepository.logout();
+      res.fold(
+        (l) {
+          if (context.mounted) {
+            showSnackBar(context, l.message);
+          }
+        },
+        (r) {
+          if (context.mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              SignInPage.route(),
+              (route) => false,
+            );
+          }
+        },
+      );
+    }
+  }
+
+  Future<void> forgotPassword(
+      {required String email, required BuildContext context}) async {
+    state = true;
+    final res = await _authRepository.forgotPassword(email: email);
+    state = false;
+
+    res.fold(
+      (l) {
+        if (context.mounted) {
+          showSnackBar(context, l.message);
+        }
+      },
+      (r) {
+        if (context.mounted) {
+          showSnackBar(context, 'Password reset link sent to your email.');
+        }
+      },
+    );
+  }
+}
+).hasMatch(idNumber)) {
+        if (context.mounted) {
+          showSnackBar(context, 'ID Number must be a 12-digit number.');
         }
         return false;
       }
@@ -356,8 +563,8 @@ class AuthController extends StateNotifier<bool> {
           success = await _updateProfileViaAPI(
             userId: userId,
             address: address,
-            idDocumentUrl: idDocumentUrl,
-            profileImageUrl: profileImageUrl,
+            idNumber: idNumber,
+            profileImage: profileImage,
             role: role,
           );
 
@@ -380,8 +587,8 @@ class AuthController extends StateNotifier<bool> {
           success = await _updateProfileDirect(
             userId: userId,
             address: address,
-            idDocumentUrl: idDocumentUrl,
-            profileImageUrl: profileImageUrl,
+            idNumber: idNumber,
+            profileImage: profileImage,
             role: role,
           );
 
@@ -396,8 +603,8 @@ class AuthController extends StateNotifier<bool> {
         success = await _updateProfileDirect(
           userId: userId,
           address: address,
-          idDocumentUrl: idDocumentUrl,
-          profileImageUrl: profileImageUrl,
+          idNumber: idNumber,
+          profileImage: profileImage,
           role: role,
         );
       }
@@ -436,8 +643,8 @@ class AuthController extends StateNotifier<bool> {
   Future<bool> _updateProfileViaAPI({
     required String userId,
     required String address,
-    required String idDocumentUrl,
-    required String profileImageUrl,
+    required String idNumber,
+    required File? profileImage,
     required String role,
   }) async {
     try {
@@ -451,45 +658,42 @@ class AuthController extends StateNotifier<bool> {
       final account = _ref.read(appwriteAccountProvider);
       final currentUser = await account.get();
 
-      // Prepare request data (userId is now in the URL path)
-      final requestData = {
-        'address': address.trim(),
-        'idDocumentUrl': idDocumentUrl.trim(),
-        'role': role,
-        'verificationStatus': VerificationStatus.pending,
-      };
+      // Prepare multipart request
+      final request = http.MultipartRequest('PATCH', Uri.parse(endpoint));
+      request.headers.addAll({
+        ...ApiConstants.defaultHeaders,
+        'Authorization': 'Bearer ${currentUser.$id}',
+      });
 
-      // Only add profileImageUrl if it's not empty
-      if (profileImageUrl.trim().isNotEmpty) {
-        requestData['profileImageUrl'] = profileImageUrl.trim();
+      request.fields['address'] = address.trim();
+      request.fields['idNumber'] = idNumber.trim();
+      request.fields['role'] = role;
+      request.fields['verificationStatus'] = VerificationStatus.pending;
+
+      if (profileImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profileImage',
+          profileImage.path,
+          filename: profileImage.path.split('/').last,
+        ));
       }
 
-      // Make API call to FastAPI server using PATCH method
-      final response = await http
-          .patch(
-            Uri.parse(endpoint),
-            headers: {
-              ...ApiConstants.defaultHeaders,
-              'Authorization':
-                  'Bearer ${currentUser.$id}', // Use user ID as auth token
-            },
-            body: jsonEncode(requestData),
-          )
-          .timeout(ApiConstants.requestTimeout);
+      final response = await request.send().timeout(ApiConstants.requestTimeout);
+      final responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData = jsonDecode(responseBody);
         Loggers.database.info(
             'Profile updated successfully via API: ${responseData['message'] ?? 'Success'}');
         return true;
       } else {
         String errorMessage = 'Unknown error';
         try {
-          final errorData = jsonDecode(response.body);
+          final errorData = jsonDecode(responseBody);
           errorMessage =
               errorData['detail'] ?? errorData['message'] ?? 'Unknown error';
         } catch (e) {
-          errorMessage = 'HTTP ${response.statusCode}: ${response.body}';
+          errorMessage = 'HTTP ${response.statusCode}: ${responseBody}';
         }
 
         Loggers.database.error('API profile update failed: $errorMessage');
@@ -520,8 +724,8 @@ class AuthController extends StateNotifier<bool> {
   Future<bool> _updateProfileDirect({
     required String userId,
     required String address,
-    required String idDocumentUrl,
-    required String profileImageUrl,
+    required String idNumber,
+    required File? profileImage,
     required String role,
   }) async {
     try {
@@ -532,15 +736,28 @@ class AuthController extends StateNotifier<bool> {
       // Prepare data for update, handling empty strings properly
       final updateData = <String, dynamic>{
         'address': address.trim(),
-        'idDocumentUrl': idDocumentUrl.trim(),
+        'idNumber': idNumber.trim(),
         'role': role,
         'verificationStatus': VerificationStatus
             .pending, // Set status to Pending after profile completion
       };
 
-      // Only add profileImageUrl if it's not empty
-      if (profileImageUrl.trim().isNotEmpty) {
-        updateData['profileImageUrl'] = profileImageUrl.trim();
+      // Handle profile image upload to Appwrite Storage
+      String? profileImageId;
+      if (profileImage != null) {
+        try {
+          final storage = Storage(client);
+          final file = await storage.createFile(
+            bucketId: AppwriteConstants.imagesBucketId, // Your images bucket ID
+            fileId: ID.unique(),
+            file: InputFile.fromPath(path: profileImage.path),
+          );
+          profileImageId = file.$id;
+          updateData['profileImage'] = profileImageId; // Store file ID in user document
+        } catch (e) {
+          Loggers.database.error('Failed to upload profile image to Appwrite Storage', error: e);
+          // Continue without profile image if upload fails
+        }
       }
 
       // Update the user document with additional information

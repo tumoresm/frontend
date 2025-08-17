@@ -1,3 +1,4 @@
+import 'package:fieldforce/features/auth/view/pages/email_verification_page.dart';
 import 'package:fieldforce/theme/theme.dart';
 import 'package:fieldforce/utils/custom_field.dart';
 import 'package:fieldforce/utils/flat_button.dart';
@@ -52,6 +53,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             password: password,
             fullName: fullName,
             phoneNumber: phoneNumber,
+            selectedAvatar: _selectedAvatar,
             context: context,
           );
 
@@ -69,7 +71,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         // Navigate to email verification page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const EmailVerificationPage()),
+          MaterialPageRoute(
+              builder: (context) => const EmailVerificationPage()),
         );
       }
     }
@@ -179,7 +182,12 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     return 'Password must contain uppercase, lowercase, number, and special character';
                   }
                   // Check for common weak passwords
-                  final weakPasswords = ['password', '12345678', 'qwerty123', 'admin123'];
+                  final weakPasswords = [
+                    'password',
+                    '12345678',
+                    'qwerty123',
+                    'admin123'
+                  ];
                   if (weakPasswords.contains(value.toLowerCase())) {
                     return 'Password is too common. Please choose a stronger password';
                   }

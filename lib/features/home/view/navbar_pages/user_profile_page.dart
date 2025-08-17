@@ -8,7 +8,6 @@ import 'package:fieldforce/utils/loading_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:fieldforce/common/widgets/avatar_selector.dart';
 
 class UserProfilePage extends ConsumerWidget {
   const UserProfilePage({super.key});
@@ -33,12 +32,12 @@ class UserProfilePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Center(
-                    child: user.profileImageUrl != null &&
-                            user.profileImageUrl!.isNotEmpty
+                    child: user.profileImage != null &&
+                            user.profileImage!.isNotEmpty
                         ? CircleAvatar(
                             radius: 50,
                             backgroundImage:
-                                NetworkImage(user.profileImageUrl!),
+                                NetworkImage(user.profileImage!),
                           )
                         : getAvatarFromId(user.selectedAvatar, size: 100),
                   ),
