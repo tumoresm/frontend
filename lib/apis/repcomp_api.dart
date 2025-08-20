@@ -26,8 +26,11 @@ class RepCompanyRelationAPI implements IRepCompanyRelationAPI {
   @override
   FutureEither<appwrite_models.Document> addRelation(
       RepCompanyRelation relation) async {
+    if (_databases == null) {
+      return left(Failure('Rep-Company relation API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _databases.createDocument(
+      final document = await _databases!.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.repCompanyRelationCollectionId,
         documentId: ID.unique(),

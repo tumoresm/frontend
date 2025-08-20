@@ -54,8 +54,11 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
 
   @override
   FutureEither<model.Document> updateWithdrawalRequest(WithdrawalRequestModel request) async {
+    if (_db == null) {
+      return left(Failure('Withdrawal request API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _db.updateDocument(
+      final document = await _db!.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: request.id,
@@ -76,8 +79,11 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
 
   @override
   Future<List<WithdrawalRequestModel>> getWithdrawalRequestsByUserId(String userId) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         queries: [
@@ -100,8 +106,11 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
 
   @override
   Future<List<WithdrawalRequestModel>> getWithdrawalRequestsByStatus(WithdrawalStatus status) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         queries: [
@@ -124,8 +133,11 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
 
   @override
   FutureEither<model.Document> cancelWithdrawalRequest(String requestId) async {
+    if (_db == null) {
+      return left(Failure('Withdrawal request API not available during migration', StackTrace.current));
+    }
     try {
-      final currentDoc = await _db.getDocument(
+      final currentDoc = await _db!.getDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: requestId,
@@ -145,7 +157,7 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
         notes: 'Cancelled by user',
       );
       
-      final document = await _db.updateDocument(
+      final document = await _db!.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: requestId,

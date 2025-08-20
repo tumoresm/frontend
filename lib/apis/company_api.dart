@@ -49,8 +49,11 @@ class CompanyAPI implements ICompanyAPI {
   @override
   Future<Either<Failure, appwrite_models.Document>> getCompanyById(
       String id) async {
+    if (_databases == null) {
+      return left(Failure('Company API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _databases.getDocument(
+      final document = await _databases!.getDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.companyCollection,
         documentId: id,

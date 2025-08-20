@@ -32,8 +32,11 @@ class BankAccountAPI implements IBankAccountAPI {
 
   @override
   FutureEither<model.Document> createBankAccount(BankAccountModel bankAccount) async {
+    if (_db == null) {
+      return left(Failure('Bank account API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _db.createDocument(
+      final document = await _db!.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: ID.unique(),
@@ -54,8 +57,11 @@ class BankAccountAPI implements IBankAccountAPI {
 
   @override
   FutureEither<model.Document> updateBankAccount(BankAccountModel bankAccount) async {
+    if (_db == null) {
+      return left(Failure('Bank account API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _db.updateDocument(
+      final document = await _db!.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccount.id,
@@ -76,8 +82,11 @@ class BankAccountAPI implements IBankAccountAPI {
 
   @override
   FutureEither<bool> deleteBankAccount(String bankAccountId) async {
+    if (_db == null) {
+      return left(Failure('Bank account API not available during migration', StackTrace.current));
+    }
     try {
-      await _db.deleteDocument(
+      await _db!.deleteDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccountId,
@@ -97,8 +106,11 @@ class BankAccountAPI implements IBankAccountAPI {
 
   @override
   Future<List<BankAccountModel>> getBankAccountsByUserId(String userId) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         queries: [
@@ -121,8 +133,11 @@ class BankAccountAPI implements IBankAccountAPI {
 
   @override
   Future<BankAccountModel?> getDefaultBankAccount(String userId) async {
+    if (_db == null) {
+      return null;
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         queries: [
@@ -149,6 +164,9 @@ class BankAccountAPI implements IBankAccountAPI {
     required String userId,
     required String bankAccountId,
   }) async {
+    if (_db == null) {
+      return left(Failure('Bank account API not available during migration', StackTrace.current));
+    }
     try {
       // First, unset all other accounts as default for this user
       final allAccounts = await getBankAccountsByUserId(userId);
@@ -159,7 +177,7 @@ class BankAccountAPI implements IBankAccountAPI {
             isDefault: false,
             updatedAt: DateTime.now(),
           );
-          await _db.updateDocument(
+          await _db!.updateDocument(
             databaseId: AppwriteConstants.databaseId,
             collectionId: AppwriteConstants.bankAccountsCollection,
             documentId: account.id,
@@ -175,7 +193,7 @@ class BankAccountAPI implements IBankAccountAPI {
         updatedAt: DateTime.now(),
       );
       
-      final document = await _db.updateDocument(
+      final document = await _db!.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccountId,

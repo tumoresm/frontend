@@ -35,8 +35,11 @@ class TransactionAPI implements ITransactionAPI {
 
   @override
   FutureEither<model.Document> createTransaction(TransactionModel transaction) async {
+    if (_db == null) {
+      return left(Failure('Transaction API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _db.createDocument(
+      final document = await _db!.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         documentId: ID.unique(),
@@ -57,8 +60,11 @@ class TransactionAPI implements ITransactionAPI {
 
   @override
   Future<List<TransactionModel>> getTransactionsByUserId(String userId) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
@@ -81,8 +87,11 @@ class TransactionAPI implements ITransactionAPI {
 
   @override
   Future<List<TransactionModel>> getTransactionsByWalletId(String walletId) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
@@ -108,8 +117,11 @@ class TransactionAPI implements ITransactionAPI {
     required String userId,
     required TransactionType type,
   }) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
@@ -137,8 +149,11 @@ class TransactionAPI implements ITransactionAPI {
     required DateTime startDate,
     required DateTime endDate,
   }) async {
+    if (_db == null) {
+      return [];
+    }
     try {
-      final documents = await _db.listDocuments(
+      final documents = await _db!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
