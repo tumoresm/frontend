@@ -41,7 +41,7 @@ class TransactionAPI implements ITransactionAPI {
       return left(Failure('Transaction API not available during migration', StackTrace.current));
     }
     try {
-      final document = await _db!.createDocument(
+      final document = await _db.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         documentId: ID.unique(),
@@ -67,7 +67,7 @@ class TransactionAPI implements ITransactionAPI {
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
@@ -94,7 +94,7 @@ class TransactionAPI implements ITransactionAPI {
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
@@ -124,7 +124,7 @@ class TransactionAPI implements ITransactionAPI {
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [
@@ -156,7 +156,7 @@ class TransactionAPI implements ITransactionAPI {
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.transactionsCollection,
         queries: [

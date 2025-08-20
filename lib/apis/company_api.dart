@@ -31,7 +31,7 @@ class CompanyAPI implements ICompanyAPI {
       return left(Failure('Company API not available during migration', StackTrace.current));
     }
     try {
-      final documents = await _databases!.listDocuments(
+      final documents = await _databases.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.companyCollection,
       );
@@ -56,7 +56,7 @@ class CompanyAPI implements ICompanyAPI {
       return left(Failure('Company API not available during migration', StackTrace.current));
     }
     try {
-      final document = await _databases!.getDocument(
+      final document = await _databases.getDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.companyCollection,
         documentId: id,

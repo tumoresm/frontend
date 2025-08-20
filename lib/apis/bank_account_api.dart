@@ -40,7 +40,7 @@ class BankAccountAPI implements IBankAccountAPI {
           StackTrace.current));
     }
     try {
-      final document = await _db!.createDocument(
+      final document = await _db.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: ID.unique(),
@@ -67,7 +67,7 @@ class BankAccountAPI implements IBankAccountAPI {
           StackTrace.current));
     }
     try {
-      final document = await _db!.updateDocument(
+      final document = await _db.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccount.id,
@@ -93,7 +93,7 @@ class BankAccountAPI implements IBankAccountAPI {
           StackTrace.current));
     }
     try {
-      await _db!.deleteDocument(
+      await _db.deleteDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccountId,
@@ -117,7 +117,7 @@ class BankAccountAPI implements IBankAccountAPI {
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         queries: [
@@ -142,7 +142,7 @@ class BankAccountAPI implements IBankAccountAPI {
       return null;
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         queries: [
@@ -183,7 +183,7 @@ class BankAccountAPI implements IBankAccountAPI {
             isDefault: false,
             updatedAt: DateTime.now(),
           );
-          await _db!.updateDocument(
+          await _db.updateDocument(
             databaseId: AppwriteConstants.databaseId,
             collectionId: AppwriteConstants.bankAccountsCollection,
             documentId: account.id,
@@ -200,7 +200,7 @@ class BankAccountAPI implements IBankAccountAPI {
         updatedAt: DateTime.now(),
       );
 
-      final document = await _db!.updateDocument(
+      final document = await _db.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccountId,
