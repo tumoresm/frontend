@@ -7,9 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final repCompanyRelationAPIProvider = Provider((ref) {
-  return RepCompanyRelationAPI(
-    databases: ref.watch(appwriteDatabasesProvider),
-  );
+  // Note: This API is deprecated and will be replaced with FastAPI implementation
+  return RepCompanyRelationAPI.stub();
 });
 
 abstract class IRepCompanyRelationAPI {
@@ -18,9 +17,11 @@ abstract class IRepCompanyRelationAPI {
 }
 
 class RepCompanyRelationAPI implements IRepCompanyRelationAPI {
-  final Databases _databases;
-  RepCompanyRelationAPI({required Databases databases})
-      : _databases = databases;
+  final Databases? _databases;
+  RepCompanyRelationAPI({Databases? databases}) : _databases = databases;
+  
+  // Stub constructor for graceful degradation
+  RepCompanyRelationAPI.stub() : _databases = null;
 
   @override
   FutureEither<appwrite_models.Document> addRelation(

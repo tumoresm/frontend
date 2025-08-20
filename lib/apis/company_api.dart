@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final companyAPIProvider = Provider((ref) {
-  return CompanyAPI(
-    databases: ref.watch(appwriteDatabasesProvider),
-  );
+  // Note: This API is deprecated and will be replaced with FastAPI implementation
+  // For now, return a stub implementation that provides graceful degradation
+  return CompanyAPI.stub();
 });
 
 abstract class ICompanyAPI {
@@ -17,13 +17,19 @@ abstract class ICompanyAPI {
 }
 
 class CompanyAPI implements ICompanyAPI {
-  final Databases _databases;
-  CompanyAPI({required Databases databases}) : _databases = databases;
+  final Databases? _databases;
+  CompanyAPI({Databases? databases}) : _databases = databases;
+  
+  // Stub constructor for graceful degradation
+  CompanyAPI.stub() : _databases = null;
 
   @override
   Future<Either<Failure, List<appwrite_models.Document>>> getCompanies() async {
+    if (_databases == null) {
+      return left(Failure('Company API not available during migration', StackTrace.current));
+    }
     try {
-      final documents = await _databases.listDocuments(
+      final documents = await _databases!.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.companyCollection,
       );

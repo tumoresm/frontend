@@ -7,9 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final bankAccountAPIProvider = Provider((ref) {
-  return BankAccountAPI(
-    db: ref.watch(appwriteDatabasesProvider),
-  );
+  // Note: This API is deprecated and will be replaced with FastAPI implementation
+  return BankAccountAPI.stub();
 });
 
 abstract class IBankAccountAPI {
@@ -25,8 +24,11 @@ abstract class IBankAccountAPI {
 }
 
 class BankAccountAPI implements IBankAccountAPI {
-  final Databases _db;
-  BankAccountAPI({required Databases db}) : _db = db;
+  final Databases? _db;
+  BankAccountAPI({Databases? db}) : _db = db;
+  
+  // Stub constructor for graceful degradation
+  BankAccountAPI.stub() : _db = null;
 
   @override
   FutureEither<model.Document> createBankAccount(BankAccountModel bankAccount) async {

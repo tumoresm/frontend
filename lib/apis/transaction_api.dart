@@ -7,9 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final transactionAPIProvider = Provider((ref) {
-  return TransactionAPI(
-    db: ref.watch(appwriteDatabasesProvider),
-  );
+  // Note: This API is deprecated and will be replaced with FastAPI implementation
+  return TransactionAPI.stub();
 });
 
 abstract class ITransactionAPI {
@@ -28,8 +27,11 @@ abstract class ITransactionAPI {
 }
 
 class TransactionAPI implements ITransactionAPI {
-  final Databases _db;
-  TransactionAPI({required Databases db}) : _db = db;
+  final Databases? _db;
+  TransactionAPI({Databases? db}) : _db = db;
+  
+  // Stub constructor for graceful degradation
+  TransactionAPI.stub() : _db = null;
 
   @override
   FutureEither<model.Document> createTransaction(TransactionModel transaction) async {

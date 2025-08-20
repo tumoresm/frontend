@@ -7,9 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final withdrawalRequestAPIProvider = Provider((ref) {
-  return WithdrawalRequestAPI(
-    db: ref.watch(appwriteDatabasesProvider),
-  );
+  // Note: This API is deprecated and will be replaced with FastAPI implementation
+  // For now, return a stub implementation that provides graceful degradation
+  return WithdrawalRequestAPI.stub();
 });
 
 abstract class IWithdrawalRequestAPI {
@@ -21,13 +21,19 @@ abstract class IWithdrawalRequestAPI {
 }
 
 class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
-  final Databases _db;
-  WithdrawalRequestAPI({required Databases db}) : _db = db;
+  final Databases? _db;
+  WithdrawalRequestAPI({Databases? db}) : _db = db;
+  
+  // Stub constructor for graceful degradation
+  WithdrawalRequestAPI.stub() : _db = null;
 
   @override
   FutureEither<model.Document> createWithdrawalRequest(WithdrawalRequestModel request) async {
+    if (_db == null) {
+      return left(Failure('Withdrawal request API not available during migration', StackTrace.current));
+    }
     try {
-      final document = await _db.createDocument(
+      final document = await _db!.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: ID.unique(),
