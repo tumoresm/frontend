@@ -1,6 +1,11 @@
 import 'package:fieldforce/common/widgets/common_widgets.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
+import 'package:fieldforce/features/profile/view/pages/portfolio_page.dart';
+import 'package:fieldforce/features/profile/view/pages/settings_page.dart';
+import 'package:fieldforce/features/profile/view/pages/security_page.dart';
+import 'package:fieldforce/features/profile/view/pages/legal_terms_page.dart';
+import 'package:fieldforce/features/profile/view/pages/help_center_page.dart';
 import 'package:fieldforce/constants/verification_constants.dart';
 import 'package:fieldforce/theme/theme.dart';
 import 'package:fieldforce/utils/flat_button.dart';
@@ -130,9 +135,11 @@ class UserProfilePage extends ConsumerWidget {
                     title: 'My Portfolio',
                     icon: Symbols.business_center,
                     onPressed: () {
-                      // TODO: Navigate to My Portfolio page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('My Portfolio - Coming Soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PortfolioPage(),
+                        ),
                       );
                     },
                   ),
@@ -140,9 +147,11 @@ class UserProfilePage extends ConsumerWidget {
                     title: 'Settings',
                     icon: Symbols.settings,
                     onPressed: () {
-                      // TODO: Navigate to Settings page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Settings - Coming Soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ),
                       );
                     },
                   ),
@@ -150,9 +159,11 @@ class UserProfilePage extends ConsumerWidget {
                     title: 'Security',
                     icon: Symbols.security,
                     onPressed: () {
-                      // TODO: Navigate to Security page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Security - Coming Soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SecurityPage(),
+                        ),
                       );
                     },
                   ),
@@ -160,9 +171,11 @@ class UserProfilePage extends ConsumerWidget {
                     title: 'Legal Terms',
                     icon: Symbols.contract_edit,
                     onPressed: () {
-                      // TODO: Navigate to Legal Terms page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Legal Terms - Coming Soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LegalTermsPage(),
+                        ),
                       );
                     },
                   ),
@@ -170,9 +183,11 @@ class UserProfilePage extends ConsumerWidget {
                     title: 'Help',
                     icon: Symbols.help,
                     onPressed: () {
-                      // TODO: Navigate to Help page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Help & Support - Coming Soon')),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpCenterPage(),
+                        ),
                       );
                     },
                   ),
