@@ -121,7 +121,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ),
                     // Spacer for EarningsCard
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 55),
                     // Main Content Section
                     Expanded(
                       child: Container(
@@ -271,8 +271,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               child: userWallet.when(
                 data: (wallet) => EarningsCard(
                   totalEarnings: wallet?.totalEarnings,
-                  totalPaid: wallet != null 
-                      ? wallet.totalEarnings - wallet.currentBalance - wallet.pendingEarnings
+                  totalPaid: wallet != null
+                      ? wallet.totalEarnings -
+                          wallet.currentBalance -
+                          wallet.pendingEarnings
                       : null,
                   isLoading: false,
                 ),
