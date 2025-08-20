@@ -1,5 +1,8 @@
+import 'package:fieldforce/features/home/provider/time_filter_provider.dart';
 import 'package:fieldforce/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class TimeFilterButtons extends StatelessWidget {
   final String label;
@@ -18,43 +21,57 @@ class TimeFilterButtons extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+        margin: EdgeInsets.symmetric(horizontal: 4.w),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12.r),
           color: isSelected
-              ? Colours.selectedIndex.withOpacity(0.06)
+              ? Colours.selectedIndex.withOpacity(0.15)
               : Colours.transparentColor,
+          border: Border.all(
+            color: isSelected
+                ? Colours.selectedIndex
+                : Colours.greyColor.withOpacity(0.3),
+            width: 1,
+          ),
         ),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 14),
+          style: TextStyle(
+            fontSize: 13.sp,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected ? Colours.selectedIndex : Colours.greyColor,
+          ),
         ),
       ),
     );
   }
 }
 
-class TimeFilterRow extends StatefulWidget {
+class TimeFilterRow extends ConsumerWidget {
   const TimeFilterRow({super.key});
 
   @override
-  State<TimeFilterRow> createState() => _TimeFilterRowState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedPeriod = ref.watch(timeFilterProvider);
+    final periods = TimeFilterPeriod.values;
 
-class _TimeFilterRowState extends State<TimeFilterRow> {
-  String selectedPeriod = 'Week';
-  final List<String> periods = ["Day", "Week", "Month", "Year"];
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: periods.map((period) {
-        return TimeFilterButtons(
-            label: period,
-            isSelected: selectedPeriod == period,
-            onPressed: () => setState(() => selectedPeriod = period));
-      }).toList(),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: periods.map((period) {
+          return Expanded(
+            child: TimeFilterButtons(
+              label: period.displayName,
+              isSelected: selectedPeriod == period,
+              onPressed: () {
+                ref.read(timeFilterProvider.notifier).setPeriod(period);
+              },
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 }
