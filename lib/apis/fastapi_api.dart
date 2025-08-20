@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:fieldforce/constants/api_constants.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/auth/model/verification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -19,17 +18,17 @@ abstract class IFastAPIApi {
     required String phoneNumber,
     String? selectedAvatar,
   });
-  
+
   FutureEither<SignInResponse> signIn({
     required String email,
     required String password,
   });
-  
+
   FutureEither<EmailVerificationResponse> verifyEmail({
     required String email,
     required String code,
   });
-  
+
   FutureEither<ResendVerificationResponse> resendVerification({
     required String email,
   });
@@ -48,7 +47,7 @@ class FastAPIApi implements IFastAPIApi {
       final endpoint = ApiConstants.registerEndpoint;
       Loggers.auth.info('Registering user at: $endpoint');
       Loggers.auth.debug('Email: $email');
-      
+
       final requestBody = {
         'email': email,
         'password': password,
@@ -56,20 +55,23 @@ class FastAPIApi implements IFastAPIApi {
         'phone': phoneNumber,
         if (selectedAvatar != null) 'selectedAvatar': selectedAvatar,
       };
-      
+
       Loggers.auth.debug('Request body prepared for registration');
-      
-      final response = await http.post(
-        Uri.parse(endpoint),
-        headers: ApiConstants.defaultHeaders,
-        body: jsonEncode(requestBody),
-      ).timeout(ApiConstants.requestTimeout);
+
+      final response = await http
+          .post(
+            Uri.parse(endpoint),
+            headers: ApiConstants.defaultHeaders,
+            body: jsonEncode(requestBody),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       Loggers.auth.debug('Response status: ${response.statusCode}');
       Loggers.auth.debug('Response received from registration endpoint');
 
       if (response.statusCode == 201) {
-        Loggers.auth.info('User registration successful - verification email should be sent');
+        Loggers.auth.info(
+            'User registration successful - verification email should be sent');
         return right(null);
       } else {
         final errorData = jsonDecode(response.body);
@@ -87,8 +89,10 @@ class FastAPIApi implements IFastAPIApi {
     } catch (e, stackTrace) {
       Loggers.auth.error('Registration error: $e');
       String userFriendlyMessage = 'Registration failed. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
@@ -107,19 +111,21 @@ class FastAPIApi implements IFastAPIApi {
       final endpoint = ApiConstants.loginEndpoint;
       Loggers.auth.info('Signing in user at: $endpoint');
       Loggers.auth.debug('Email: $email');
-      
+
       final requestBody = {
         'email': email,
         'password': password,
       };
-      
+
       Loggers.auth.debug('Request body prepared for sign-in');
-      
-      final response = await http.post(
-        Uri.parse(endpoint),
-        headers: ApiConstants.defaultHeaders,
-        body: jsonEncode(requestBody),
-      ).timeout(ApiConstants.requestTimeout);
+
+      final response = await http
+          .post(
+            Uri.parse(endpoint),
+            headers: ApiConstants.defaultHeaders,
+            body: jsonEncode(requestBody),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       Loggers.auth.debug('Response status: ${response.statusCode}');
       Loggers.auth.debug('Response received from sign-in endpoint');
@@ -144,8 +150,10 @@ class FastAPIApi implements IFastAPIApi {
     } catch (e, stackTrace) {
       Loggers.auth.error('Sign-in error: $e');
       String userFriendlyMessage = 'Sign-in failed. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
@@ -172,7 +180,7 @@ class FastAPIApi implements IFastAPIApi {
       );
 
       final responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return right(EmailVerificationResponse.fromMap(responseData));
       } else {
@@ -204,7 +212,7 @@ class FastAPIApi implements IFastAPIApi {
       );
 
       final responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return right(ResendVerificationResponse.fromMap(responseData));
       } else {

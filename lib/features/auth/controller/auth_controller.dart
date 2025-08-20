@@ -24,8 +24,7 @@ final authControllerProvider =
 });
 
 /// ✅ FIX: Auto-refresh provider that detects session changes using FastAPI session
-final currentUserProvider = FutureProvider.autoDispose(
-  (ref) async {
+final currentUserProvider = FutureProvider.autoDispose((ref) async {
   try {
     final sessionManager = SessionManager.instance;
     final isLoggedIn = await sessionManager.isLoggedIn();
@@ -292,6 +291,7 @@ class AuthController extends StateNotifier<bool> {
     required File? profileImage,
     required String role,
     required BuildContext context,
+    required String verificationStatus,
   }) async {
     state = true;
     try {
@@ -330,7 +330,7 @@ class AuthController extends StateNotifier<bool> {
 
       if (success) {
         Loggers.database.info('Profile updated successfully for user: $userId');
-        
+
         // Update local session data to reflect the changes
         await SessionManager.instance.updateUserProfile(
           address: address,
@@ -338,12 +338,12 @@ class AuthController extends StateNotifier<bool> {
           role: role,
           profileImage: profileImage?.path,
         );
-        
+
         // Force refresh of providers to pick up the updated session data
         _ref.invalidate(currentUserProvider);
         _ref.invalidate(currentUserDetailsProvider);
         _ref.invalidate(isProfileCompleteProvider);
-        
+
         if (context.mounted) {
           showSnackBar(
               context, 'Profile updated successfully! Awaiting verification.');

@@ -54,7 +54,7 @@ class TimeFilterRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPeriod = ref.watch(timeFilterProvider);
-    final periods = TimeFilterPeriod.values;
+    const periods = TimeFilterPeriod.values;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w),

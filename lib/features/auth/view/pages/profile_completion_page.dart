@@ -69,8 +69,12 @@ class _ProfileCompletionPageState extends ConsumerState<ProfileCompletionPage> {
 
       // Update profile with new information
       await ref.read(authControllerProvider.notifier).updateUserProfile(
+        userId: currentUser.id,
         address: _addressController.text.trim(),
+        idNumber: _idNumberController.text.trim().isEmpty ? '0000000000000' : _idNumberController.text.trim(), // Default ID if not provided
+        profileImage: _profileImage,
         role: _selectedRole,
+        context: context,
         verificationStatus: 'pending', // Set to pending after profile completion
       );
 

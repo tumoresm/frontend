@@ -1,4 +1,3 @@
-import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
 import 'package:fieldforce/features/home/provider/time_filter_provider.dart';
 import 'package:fieldforce/common/widgets/notifications_dialog.dart';
@@ -147,7 +146,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 data: (wallet) => EarningsCard(
                   totalEarnings: wallet?.totalEarnings,
                   totalPaid: wallet != null
-                      ? wallet.totalEarnings - wallet.currentBalance - wallet.pendingEarnings
+                      ? wallet.totalEarnings -
+                          wallet.currentBalance -
+                          wallet.pendingEarnings
                       : null,
                   isLoading: false,
                 ),
@@ -193,7 +194,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ),
                             ),
                             SizedBox(height: 20.h),
-                            
+
                             // Responsive Chart
                             Container(
                               height: isSmallScreen ? 140.h : 160.h,
@@ -209,9 +210,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                                       sideTitles: SideTitles(
                                         showTitles: true,
                                         getTitlesWidget: (value, meta) {
-                                          final labels = chartData['labels'] as List<String>;
+                                          final labels = chartData['labels']
+                                              as List<String>;
                                           final index = value.toInt();
-                                          if (index >= 0 && index < labels.length) {
+                                          if (index >= 0 &&
+                                              index < labels.length) {
                                             return Text(
                                               labels[index],
                                               style: TextStyle(
@@ -236,13 +239,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   borderData: FlBorderData(show: false),
                                   lineBarsData: [
                                     LineChartBarData(
-                                      spots: _generateChartSpots(chartData['data'] as List<double>),
+                                      spots: _generateChartSpots(
+                                          chartData['data'] as List<double>),
                                       isCurved: true,
                                       color: kPrimary,
                                       barWidth: 3,
                                       dotData: FlDotData(
                                         show: true,
-                                        getDotPainter: (spot, percent, barData, index) {
+                                        getDotPainter:
+                                            (spot, percent, barData, index) {
                                           return FlDotCirclePainter(
                                             radius: 4,
                                             color: kPrimary,
@@ -283,7 +288,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     // Orders List Header
                     SliverToBoxAdapter(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 20.w, vertical: 16.h),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -334,7 +340,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     Text(
                                       "Try selecting a different time period",
                                       style: TextStyle(
-                                        color: Colours.greyColor.withOpacity(0.7),
+                                        color:
+                                            Colours.greyColor.withOpacity(0.7),
                                         fontSize: 14.sp,
                                       ),
                                     ),

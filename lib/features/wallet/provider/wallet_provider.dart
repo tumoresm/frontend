@@ -256,6 +256,22 @@ class WalletController extends StateNotifier<bool> {
     return await _bankAccountAPI.getBankAccountsByUserId(userId);
   }
 
+  Future<void> createBankAccount(BankAccountModel bankAccount) async {
+    state = true;
+    try {
+      final res = await _bankAccountAPI.createBankAccount(bankAccount);
+      res.fold(
+        (l) => throw Exception(l.message),
+        (r) {
+          // Refresh bank accounts data
+          _ref.refresh(getUserBankAccountsProvider);
+        },
+      );
+    } finally {
+      state = false;
+    }
+  }
+
   Future<void> addBankAccount({
     required BankAccountModel bankAccount,
     required BuildContext context,
@@ -358,7 +374,24 @@ class WalletController extends StateNotifier<bool> {
     );
   }
 
-  Future<void> cancelWithdrawalRequest({
+  Future<void> cancelWithdrawalRequest(String requestId) async {
+    state = true;
+    try {
+      final res = await _withdrawalRequestAPI.cancelWithdrawalRequest(requestId);
+      res.fold(
+        (l) => throw Exception(l.message),
+        (r) {
+          // Refresh withdrawal requests and wallet data
+          _ref.refresh(getUserWithdrawalRequestsProvider);
+          _ref.refresh(getUserWalletProvider);
+        },
+      );
+    } finally {
+      state = false;
+    }
+  }
+
+  Future<void> cancelWithdrawalRequestWithContext({
     required String requestId,
     required BuildContext context,
   }) async {
