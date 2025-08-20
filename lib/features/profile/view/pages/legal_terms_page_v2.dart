@@ -32,7 +32,9 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
           IconButton(
             icon: const Icon(Symbols.refresh),
             onPressed: () {
-              ref.read(legalDocumentControllerProvider.notifier).refreshDocuments();
+              ref
+                  .read(legalDocumentControllerProvider.notifier)
+                  .refreshDocuments();
             },
             tooltip: 'Refresh Documents',
           ),
@@ -99,7 +101,9 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref.read(legalDocumentControllerProvider.notifier).loadDocuments();
+                ref
+                    .read(legalDocumentControllerProvider.notifier)
+                    .loadDocuments();
               },
               child: const Text('Retry'),
             ),
@@ -119,13 +123,15 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Symbols.description_off,
+              Symbols.file_copy_off,
               size: 64,
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
             const SizedBox(height: 16),
             Text(
-              _searchQuery.isEmpty ? 'No legal documents available' : 'No documents found',
+              _searchQuery.isEmpty
+                  ? 'No legal documents available'
+                  : 'No documents found',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -176,7 +182,8 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
           // Document Information Card
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -191,9 +198,10 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
                       const SizedBox(width: 8),
                       Text(
                         'Document Information',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                     ],
                   ),
@@ -272,26 +280,28 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
     }
   }
 
-  String _buildDocumentSubtitle(LegalDocumentModel doc, AsyncValue currentUser) {
+  String _buildDocumentSubtitle(
+      LegalDocumentModel doc, AsyncValue currentUser) {
     final parts = <String>[];
-    
+
     if (doc.summary != null) {
       parts.add(doc.summary!);
     }
-    
+
     parts.add('Version ${doc.version}');
     parts.add('Updated ${_formatDate(doc.lastUpdated)}');
-    
+
     return parts.join(' • ');
   }
 
-  Widget? _buildDocumentTrailing(LegalDocumentModel doc, AsyncValue currentUser) {
+  Widget? _buildDocumentTrailing(
+      LegalDocumentModel doc, AsyncValue currentUser) {
     if (!doc.isRequired) return null;
 
     return currentUser.when(
       data: (user) {
         if (user == null) return null;
-        
+
         return FutureBuilder<bool>(
           future: ref
               .read(legalDocumentControllerProvider.notifier)
@@ -304,7 +314,7 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               );
             }
-            
+
             final hasAccepted = snapshot.data ?? false;
             return Icon(
               hasAccepted ? Symbols.check_circle : Symbols.pending,
@@ -319,7 +329,8 @@ class _LegalTermsPageV2State extends ConsumerState<LegalTermsPageV2> {
     );
   }
 
-  void _showDocument(BuildContext context, LegalDocumentModel doc, AsyncValue currentUser) {
+  void _showDocument(
+      BuildContext context, LegalDocumentModel doc, AsyncValue currentUser) {
     showDialog(
       context: context,
       builder: (context) => _DocumentDialog(
@@ -362,8 +373,9 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
     if (user != null) {
       final hasAccepted = await ref
           .read(legalDocumentControllerProvider.notifier)
-          .hasUserAcceptedDocument(user.id, widget.document.id, widget.document.version);
-      
+          .hasUserAcceptedDocument(
+              user.id, widget.document.id, widget.document.version);
+
       if (mounted) {
         setState(() {
           _hasAccepted = hasAccepted;
@@ -384,13 +396,13 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
       await ref
           .read(legalDocumentControllerProvider.notifier)
           .acceptDocument(user.id, widget.document.id, widget.document.version);
-      
+
       if (mounted) {
         setState(() {
           _hasAccepted = true;
           _isLoading = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${widget.document.title} accepted'),
@@ -403,7 +415,7 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
         setState(() {
           _isLoading = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error accepting document: $e'),
@@ -433,8 +445,8 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
                       Text(
                         widget.document.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       Text(
                         'Version ${widget.document.version} • Updated ${_formatDate(widget.document.lastUpdated)}',
@@ -449,14 +461,16 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
                 ),
               ],
             ),
-            
+
             if (widget.document.isRequired) ...[
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _hasAccepted ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                  color: _hasAccepted
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: _hasAccepted ? Colors.green : Colors.orange,
@@ -465,18 +479,22 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
                 child: Row(
                   children: [
                     Icon(
-                      _hasAccepted ? Symbols.check_circle : Symbols.priority_high,
+                      _hasAccepted
+                          ? Symbols.check_circle
+                          : Symbols.priority_high,
                       color: _hasAccepted ? Colors.green : Colors.orange,
                       size: 16,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _hasAccepted 
+                        _hasAccepted
                             ? 'You have accepted this document'
                             : 'This document requires your acceptance',
                         style: TextStyle(
-                          color: _hasAccepted ? Colors.green[700] : Colors.orange[700],
+                          color: _hasAccepted
+                              ? Colors.green[700]
+                              : Colors.orange[700],
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -486,9 +504,9 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
                 ),
               ),
             ],
-            
+
             const Divider(),
-            
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -498,9 +516,9 @@ class _DocumentDialogState extends ConsumerState<_DocumentDialog> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Actions
             Row(
               children: [
