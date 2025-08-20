@@ -2,6 +2,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as appwrite_models;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/companies/model/rep_company_relation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -27,6 +28,7 @@ class RepCompanyRelationAPI implements IRepCompanyRelationAPI {
   FutureEither<appwrite_models.Document> addRelation(
       RepCompanyRelation relation) async {
     if (_databases == null) {
+      Loggers.database.warning('Rep-Company relation API not available during migration');
       return left(Failure('Rep-Company relation API not available during migration', StackTrace.current));
     }
     try {

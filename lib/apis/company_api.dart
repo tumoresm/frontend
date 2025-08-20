@@ -2,6 +2,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as appwrite_models;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -26,6 +27,7 @@ class CompanyAPI implements ICompanyAPI {
   @override
   Future<Either<Failure, List<appwrite_models.Document>>> getCompanies() async {
     if (_databases == null) {
+      Loggers.database.warning('Company API not available during migration');
       return left(Failure('Company API not available during migration', StackTrace.current));
     }
     try {
@@ -50,6 +52,7 @@ class CompanyAPI implements ICompanyAPI {
   Future<Either<Failure, appwrite_models.Document>> getCompanyById(
       String id) async {
     if (_databases == null) {
+      Loggers.database.warning('Company API not available during migration');
       return left(Failure('Company API not available during migration', StackTrace.current));
     }
     try {
