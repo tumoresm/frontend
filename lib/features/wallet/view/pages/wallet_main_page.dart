@@ -3,6 +3,9 @@ import 'package:fieldforce/features/wallet/view/widgets/wallet_balance_card.dart
 import 'package:fieldforce/features/wallet/view/widgets/wallet_quick_actions.dart';
 import 'package:fieldforce/features/wallet/view/widgets/transaction_list_widget.dart';
 import 'package:fieldforce/features/wallet/view/widgets/withdrawal_request_dialog.dart';
+import 'package:fieldforce/features/wallet/view/pages/add_bank_account_page.dart';
+import 'package:fieldforce/features/wallet/view/pages/transaction_history_page.dart';
+import 'package:fieldforce/features/wallet/view/pages/withdrawal_requests_page.dart';
 import 'package:fieldforce/theme/app_colours.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -183,28 +186,25 @@ class WalletMainPage extends ConsumerWidget {
   }
 
   void _navigateToAddBankAccount(BuildContext context) {
-    // TODO: Navigate to add bank account page
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add Bank Account feature coming soon!'),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AddBankAccountPage(),
       ),
     );
   }
 
   void _navigateToTransactionHistory(BuildContext context) {
-    // TODO: Navigate to transaction history page
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transaction History feature coming soon!'),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const TransactionHistoryPage(),
       ),
     );
   }
 
   void _navigateToWithdrawalRequests(BuildContext context) {
-    // TODO: Navigate to withdrawal requests page
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Withdrawal Requests feature coming soon!'),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const WithdrawalRequestsPage(),
       ),
     );
   }

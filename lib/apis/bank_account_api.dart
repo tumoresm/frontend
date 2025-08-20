@@ -26,17 +26,19 @@ abstract class IBankAccountAPI {
 class BankAccountAPI implements IBankAccountAPI {
   final Databases? _db;
   BankAccountAPI({Databases? db}) : _db = db;
-  
+
   // Stub constructor for graceful degradation
   BankAccountAPI.stub() : _db = null;
 
   @override
-  FutureEither<model.Document> createBankAccount(BankAccountModel bankAccount) async {
+  FutureEither<model.Document> createBankAccount(
+      BankAccountModel bankAccount) async {
     if (_db == null) {
-      return left(Failure('Bank account API not available during migration', StackTrace.current));
+      return left(Failure('Bank account API not available during migration',
+          StackTrace.current));
     }
     try {
-      final document = await _db!.createDocument(
+      final document = await _db.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: ID.unique(),
@@ -56,9 +58,11 @@ class BankAccountAPI implements IBankAccountAPI {
   }
 
   @override
-  FutureEither<model.Document> updateBankAccount(BankAccountModel bankAccount) async {
+  FutureEither<model.Document> updateBankAccount(
+      BankAccountModel bankAccount) async {
     if (_db == null) {
-      return left(Failure('Bank account API not available during migration', StackTrace.current));
+      return left(Failure('Bank account API not available during migration',
+          StackTrace.current));
     }
     try {
       final document = await _db!.updateDocument(
@@ -83,7 +87,8 @@ class BankAccountAPI implements IBankAccountAPI {
   @override
   FutureEither<bool> deleteBankAccount(String bankAccountId) async {
     if (_db == null) {
-      return left(Failure('Bank account API not available during migration', StackTrace.current));
+      return left(Failure('Bank account API not available during migration',
+          StackTrace.current));
     }
     try {
       await _db!.deleteDocument(
@@ -118,14 +123,12 @@ class BankAccountAPI implements IBankAccountAPI {
           Query.orderDesc('createdAt'),
         ],
       );
-      
-      return documents.documents
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data);
-            data['\$id'] = doc.$id; // Add document ID to data
-            return BankAccountModel.fromMap(data);
-          })
-          .toList();
+
+      return documents.documents.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data);
+        data['\$id'] = doc.$id; // Add document ID to data
+        return BankAccountModel.fromMap(data);
+      }).toList();
     } catch (e) {
       return [];
     }
@@ -145,11 +148,11 @@ class BankAccountAPI implements IBankAccountAPI {
           Query.equal('isDefault', true),
         ],
       );
-      
+
       if (documents.documents.isEmpty) {
         return null;
       }
-      
+
       final doc = documents.documents.first;
       final data = Map<String, dynamic>.from(doc.data);
       data['\$id'] = doc.$id; // Add document ID to data
@@ -165,12 +168,13 @@ class BankAccountAPI implements IBankAccountAPI {
     required String bankAccountId,
   }) async {
     if (_db == null) {
-      return left(Failure('Bank account API not available during migration', StackTrace.current));
+      return left(Failure('Bank account API not available during migration',
+          StackTrace.current));
     }
     try {
       // First, unset all other accounts as default for this user
       final allAccounts = await getBankAccountsByUserId(userId);
-      
+
       for (final account in allAccounts) {
         if (account.isDefault && account.id != bankAccountId) {
           final updatedAccount = account.copyWith(
@@ -185,21 +189,22 @@ class BankAccountAPI implements IBankAccountAPI {
           );
         }
       }
-      
+
       // Now set the specified account as default
-      final targetAccount = allAccounts.firstWhere((account) => account.id == bankAccountId);
+      final targetAccount =
+          allAccounts.firstWhere((account) => account.id == bankAccountId);
       final updatedTargetAccount = targetAccount.copyWith(
         isDefault: true,
         updatedAt: DateTime.now(),
       );
-      
+
       final document = await _db!.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: bankAccountId,
         data: updatedTargetAccount.toMap(),
       );
-      
+
       return right(document);
     } on AppwriteException catch (e, st) {
       return left(

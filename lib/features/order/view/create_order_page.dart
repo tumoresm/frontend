@@ -29,6 +29,8 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
   final customerEmailController = TextEditingController();
   final customerAddressController = TextEditingController();
   final customerLocationController = TextEditingController();
+  Map<String, dynamic> _customerLocation = {};
+  bool _isLocationSelected = false;
   // Controllers for invoice calculation
   final productPriceController = TextEditingController();
   final shippingController = TextEditingController();
@@ -48,6 +50,55 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
     shippingController.dispose();
     taxRateController.dispose();
     super.dispose();
+  }
+
+  void _showLocationPicker() {
+    // For now, we'll simulate location selection with a dialog
+    // In a real app, this would open a map picker
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Location'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'In a real implementation, this would open a map where you can select the customer\'s location.',
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'For demo purposes, we\'ll use a sample location:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text('Sample Location: Downtown Office'),
+            const Text('Latitude: 40.7128'),
+            const Text('Longitude: -74.0060'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _customerLocation = {
+                  'latitude': 40.7128,
+                  'longitude': -74.0060,
+                  'address': 'Downtown Office, New York, NY',
+                  'name': 'Sample Location',
+                };
+                _isLocationSelected = true;
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Use Sample Location'),
+          ),
+        ],
+      ),
+    );
   }
 
   void onSubmit(String userId) async {
@@ -86,8 +137,7 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
             customerPhone: customerPhoneController.text,
             customerEmail: customerEmailController.text,
             customerAddress: customerAddressController.text,
-            customerLocation: {},
-            // TODO: Implement location picker
+            customerLocation: _customerLocation,
             orderStatus: OrderStatus.pending, // Default status for a new order
             statusReason: null,
           );
@@ -151,6 +201,49 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
                           }
                           return null;
                         }),
+                    const SizedBox(height: 15.0),
+                    // Location Picker
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: _isLocationSelected ? Colors.green : Colors.grey,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.location_on,
+                          color: _isLocationSelected ? Colors.green : Colors.grey,
+                        ),
+                        title: Text(
+                          _isLocationSelected
+                              ? 'Location Selected'
+                              : 'Select Customer Location',
+                          style: TextStyle(
+                            color: _isLocationSelected ? Colors.green : Colors.grey[600],
+                          ),
+                        ),
+                        subtitle: _isLocationSelected
+                            ? Text(
+                                'Lat: ${_customerLocation['latitude']?.toStringAsFixed(6)}, '
+                                'Lng: ${_customerLocation['longitude']?.toStringAsFixed(6)}',
+                                style: const TextStyle(fontSize: 12),
+                              )
+                            : const Text('Tap to select location on map'),
+                        trailing: _isLocationSelected
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    _customerLocation = {};
+                                    _isLocationSelected = false;
+                                  });
+                                },
+                              )
+                            : const Icon(Icons.arrow_forward_ios),
+                        onTap: () => _showLocationPicker(),
+                      ),
+                    ),
                     const SizedBox(height: 15.0),
                     CustomTextField(
                         controller: customerPhoneController,
