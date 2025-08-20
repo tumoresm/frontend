@@ -41,4 +41,5 @@ flutter:
     - assets/svg/
     - assets/image/
     - assets/anime/
+    - assets/legal/
     - .env

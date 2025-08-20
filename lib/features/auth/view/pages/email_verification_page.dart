@@ -11,14 +11,15 @@ import 'package:material_symbols_icons/symbols.dart';
 
 class EmailVerificationPage extends ConsumerStatefulWidget {
   final String? email;
-  
+
   const EmailVerificationPage({
     super.key,
     this.email,
   });
 
   @override
-  ConsumerState<EmailVerificationPage> createState() => _EmailVerificationPageState();
+  ConsumerState<EmailVerificationPage> createState() =>
+      _EmailVerificationPageState();
 }
 
 class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
@@ -44,11 +45,12 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
 
   void _verifyEmail() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final success = await ref.read(authControllerProvider.notifier).verifyEmail(
-        email: _emailController.text.trim(),
-        code: _codeController.text.trim(),
-        context: context,
-      );
+      final success =
+          await ref.read(authControllerProvider.notifier).verifyEmail(
+                email: _emailController.text.trim(),
+                code: _codeController.text.trim(),
+                context: context,
+              );
 
       // Navigation is handled in the auth controller
       // If verification is successful, user will be redirected to sign in
@@ -67,10 +69,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
       _isResending = true;
     });
 
-    final success = await ref.read(authControllerProvider.notifier).resendVerificationCode(
-      email: _emailController.text.trim(),
-      context: context,
-    );
+    final success =
+        await ref.read(authControllerProvider.notifier).resendVerificationCode(
+              email: _emailController.text.trim(),
+              context: context,
+            );
 
     setState(() {
       _isResending = false;
@@ -105,7 +108,8 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (context) => EmailTroubleshootingDialog(email: widget.email),
+                builder: (context) =>
+                    EmailTroubleshootingDialog(email: widget.email),
               );
             },
             tooltip: 'Email not received?',
@@ -126,7 +130,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
                 color: Colours.gradient2,
               ),
               const SizedBox(height: 24),
-              
+
               const Text(
                 'Check Your Email',
                 style: TextStyle(
@@ -136,7 +140,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              
+
               Text(
                 'We\'ve sent an 8-digit verification code to ${widget.email ?? 'your email address'}. Please enter it below to verify your account.',
                 style: const TextStyle(
@@ -226,7 +230,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
                     color: Colours.gradient2.withOpacity(0.3),
                   ),
                 ),
-                child: Column(
+                child: const Column(
                   children: [
                     Row(
                       children: [
@@ -235,8 +239,8 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
                           color: Colours.gradient2,
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        const Text(
+                        SizedBox(width: 8),
+                        Text(
                           'Important Information',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -245,8 +249,8 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       '• Verification codes expire after 15 minutes\n'
                       '• Each code can only be used once\n'
                       '• Check your spam/junk folder if you don\'t see the email\n'

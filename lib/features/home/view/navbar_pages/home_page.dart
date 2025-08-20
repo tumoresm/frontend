@@ -2,6 +2,7 @@ import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/common/widgets/notifications_dialog.dart';
 import 'package:fieldforce/features/home/view/widgets/time_filter_buttons.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
+import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
 import 'package:fieldforce/theme/app_colours.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final currentUserDetails = ref.watch(currentUserDetailsProvider);
     final orders = ref.watch(getOrdersProvider);
+    final userWallet = ref.watch(getUserWalletProvider);
 
     return Scaffold(
       backgroundColor: kRed,
@@ -119,7 +121,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ),
                     // Spacer for EarningsCard
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 55),
                     // Main Content Section
                     Expanded(
                       child: Container(
@@ -262,11 +264,23 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Center(child: Text(error.toString())),
             ),
             // Positioned EarningsCard
-            const Positioned(
+            Positioned(
               top: 80,
-              left: 25,
-              right: 25,
-              child: EarningsCard(),
+              left: 16,
+              right: 16,
+              child: userWallet.when(
+                data: (wallet) => EarningsCard(
+                  totalEarnings: wallet?.totalEarnings,
+                  totalPaid: wallet != null
+                      ? wallet.totalEarnings -
+                          wallet.currentBalance -
+                          wallet.pendingEarnings
+                      : null,
+                  isLoading: false,
+                ),
+                loading: () => const EarningsCard(isLoading: true),
+                error: (error, stack) => const EarningsCard(),
+              ),
             ),
           ],
         ),

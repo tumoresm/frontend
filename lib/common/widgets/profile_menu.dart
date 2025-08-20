@@ -19,6 +19,7 @@ class ProfileMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      onTap: onPressed,
       leading: Container(
         width: 40,
         height: 40,
