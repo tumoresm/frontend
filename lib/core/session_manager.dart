@@ -1,0 +1,137 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fieldforce/features/auth/model/verification_model.dart';
+import 'package:fieldforce/core/logger.dart';
+
+class SessionManager {
+  static const String _accessTokenKey = 'access_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _userDataKey = 'user_data';
+  static const String _isLoggedInKey = 'is_logged_in';
+
+  static SessionManager? _instance;
+  static SessionManager get instance => _instance ??= SessionManager._();
+  
+  SessionManager._();
+
+  SharedPreferences? _prefs;
+
+  Future<void> _initPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+  }
+
+  /// Save user session after successful sign-in
+  Future<void> saveSession(SignInData signInData) async {
+    await _initPrefs();
+    
+    await _prefs!.setString(_accessTokenKey, signInData.accessToken);
+    await _prefs!.setString(_refreshTokenKey, signInData.refreshToken);
+    await _prefs!.setString(_userDataKey, jsonEncode({
+      'userId': signInData.userId,
+      'email': signInData.email,
+      'fullName': signInData.fullName,
+      'verificationStatus': signInData.verificationStatus,
+      'profile': signInData.profile != null ? {
+        'phoneNumber': signInData.profile!.phoneNumber,
+        'role': signInData.profile!.role,
+        'address': signInData.profile!.address,
+        'idNumber': signInData.profile!.idNumber,
+        'profileImage': signInData.profile!.profileImage,
+        'selectedAvatar': signInData.profile!.selectedAvatar,
+      } : null,
+    }));
+    await _prefs!.setBool(_isLoggedInKey, true);
+    
+    Loggers.auth.info('Session saved successfully for user: ${signInData.email}');
+  }
+
+  /// Get current access token
+  Future<String?> getAccessToken() async {
+    await _initPrefs();
+    return _prefs!.getString(_accessTokenKey);
+  }
+
+  /// Get current refresh token
+  Future<String?> getRefreshToken() async {
+    await _initPrefs();
+    return _prefs!.getString(_refreshTokenKey);
+  }
+
+  /// Get current user data
+  Future<Map<String, dynamic>?> getUserData() async {
+    await _initPrefs();
+    final userDataString = _prefs!.getString(_userDataKey);
+    if (userDataString != null) {
+      return jsonDecode(userDataString);
+    }
+    return null;
+  }
+
+  /// Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    await _initPrefs();
+    return _prefs!.getBool(_isLoggedInKey) ?? false;
+  }
+
+  /// Update access token (for token refresh)
+  Future<void> updateAccessToken(String newAccessToken) async {
+    await _initPrefs();
+    await _prefs!.setString(_accessTokenKey, newAccessToken);
+  }
+
+  /// Clear session (logout)
+  Future<void> clearSession() async {
+    await _initPrefs();
+    await _prefs!.remove(_accessTokenKey);
+    await _prefs!.remove(_refreshTokenKey);
+    await _prefs!.remove(_userDataKey);
+    await _prefs!.setBool(_isLoggedInKey, false);
+    
+    Loggers.auth.info('Session cleared successfully');
+  }
+
+  /// Update user profile data in session after successful profile update
+  Future<void> updateUserProfile({
+    required String address,
+    required String idNumber,
+    required String role,
+    String? profileImage,
+  }) async {
+    await _initPrefs();
+    final userDataString = _prefs!.getString(_userDataKey);
+    
+    if (userDataString != null) {
+      final userData = jsonDecode(userDataString) as Map<String, dynamic>;
+      
+      // Update the profile section
+      final profile = userData['profile'] as Map<String, dynamic>? ?? {};
+      profile['address'] = address;
+      profile['idNumber'] = idNumber;
+      profile['role'] = role;
+      if (profileImage != null) {
+        profile['profileImage'] = profileImage;
+      }
+      
+      userData['profile'] = profile;
+      
+      // Save updated data back to preferences
+      await _prefs!.setString(_userDataKey, jsonEncode(userData));
+      
+      Loggers.auth.info('Session profile data updated successfully');
+    }
+  }
+
+  /// Get authorization header for API calls
+  Future<Map<String, String>> getAuthHeaders() async {
+    final token = await getAccessToken();
+    if (token != null) {
+      return {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+    }
+    return {
+      'Content-Type': 'application/json',
+    };
+  }
+}

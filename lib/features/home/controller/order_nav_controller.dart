@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fieldforce/apis/order_api.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
 import 'package:fieldforce/features/order/provider/order_provider.dart';
@@ -53,7 +54,18 @@ class OrderNavController extends _$OrderNavController {
 
     // Fetch the orders from the API. Riverpod handles loading/error states.
     final orderAPI = ref.watch(orderAPIProvider);
-    final orders = await orderAPI.getRepOrders(user.id);
+    final ordersResult = await orderAPI.getRepOrders(user.id);
+
+    // Handle the Either result properly
+    final orders = ordersResult.fold(
+      (failure) {
+        // Log the error and return empty list for graceful degradation
+        Loggers.database.warning('Failed to fetch orders for user ${user.id}: ${failure.message}');
+        Loggers.database.info('Returning empty orders list until migration to FastAPI is complete');
+        return <OrderModel>[];
+      },
+      (ordersList) => ordersList,
+    );
 
     return OrderNavState(orders: orders);
   }

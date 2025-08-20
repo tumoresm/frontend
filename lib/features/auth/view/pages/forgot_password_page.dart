@@ -1,5 +1,4 @@
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
-import 'package:fieldforce/core/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

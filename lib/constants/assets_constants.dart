@@ -1,24 +1,13 @@
 class AssetsConstants {
   static const String _svgsPath = 'assets/svg';
   static const String _imagePath = 'assets/image';
+  static const String _animePath = 'assets/anime';
 
   // SVG Assets
   static const String salesTrackerLogo = '$_svgsPath/logo.svg';
-  static const String comment = '$_svgsPath/comment.svg';
-  static const String gif = '$_svgsPath/gif.svg';
-  static const String homeFilled = '$_svgsPath/home_filled.svg';
-  static const String homeOutlined = '$_svgsPath/home_outlined.svg';
-  static const String search = '$_svgsPath/search.svg';
-  static const String notifFilled = '$_svgsPath/notif_filled.svg';
-  static const String notifOutlined = '$_svgsPath/notif_outlined.svg';
-  static const String likeFilled = '$_svgsPath/like_filled.svg';
-  static const String likeOutlined = '$_svgsPath/like_outlined.svg';
-  static const String retweet = '$_svgsPath/retweet.svg';
-  static const String views = '$_svgsPath/views.svg';
-  static const String emoji = '$_svgsPath/emoji.svg';
-  static const String gallery = '$_svgsPath/gallery.svg';
-  static const String twitterLogo = '$_svgsPath/twitter_logo.svg';
-  static const String verified = '$_svgsPath/verified.svg';
+
+  //JSON Assets
+  static const String animeSplash = '$_animePath/sales_trackerSplash.json';
 
   // Image Assets
   static const String telecom = '$_imagePath/communication.png';

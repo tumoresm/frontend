@@ -1,5 +1,6 @@
 import 'package:fieldforce/apis/order_api.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// A simple provider that other providers can watch.
@@ -15,15 +16,29 @@ final orderControllerProvider =
   );
 });
 
-final getOrdersProvider = FutureProvider((ref) {
-  final orderController = ref.watch(orderControllerProvider.notifier);
-  return orderController.getOrders();
-});
+final getOrdersProvider = FutureProvider((ref) async {
+  try {
+    final orderController = ref.watch(orderControllerProvider.notifier);
+    return await orderController.getOrders();
+  } catch (e) {
+    // Handle Appwrite authentication errors gracefully
+    Loggers.database.warning('Orders API not available (Appwrite auth issue): $e');
+    Loggers.database.info('Returning empty orders list until migration to FastAPI is complete');
+    return <OrderModel>[];
+  }
+}, name: 'getOrdersProvider');
 
-final getRepOrdersProvider = FutureProvider.family((ref, String repId) {
-  final orderController = ref.watch(orderControllerProvider.notifier);
-  return orderController.getRepOrders(repId);
-});
+final getRepOrdersProvider = FutureProvider.family((ref, String repId) async {
+  try {
+    final orderController = ref.watch(orderControllerProvider.notifier);
+    return await orderController.getRepOrders(repId);
+  } catch (e) {
+    // Handle Appwrite authentication errors gracefully
+    Loggers.database.warning('Rep orders API not available (Appwrite auth issue): $e');
+    Loggers.database.info('Returning empty orders list for rep $repId until migration to FastAPI is complete');
+    return <OrderModel>[];
+  }
+}, name: 'getRepOrdersProvider');
 
 /// This controller is now focused only on actions, like creating an order.
 /// The state it manages (`bool`) is purely for the loading status of the creation process.
@@ -37,11 +52,25 @@ class OrderController extends StateNotifier<bool> {
         super(false); // represents loading state
 
   Future<List<OrderModel>> getOrders() async {
-    return _orderAPI.getOrders();
+    final result = await _orderAPI.getOrders();
+    return result.fold(
+      (failure) {
+        Loggers.database.error('Failed to get orders: ${failure.message}');
+        return <OrderModel>[];
+      },
+      (orders) => orders,
+    );
   }
 
   Future<List<OrderModel>> getRepOrders(String repId) async {
-    return _orderAPI.getRepOrders(repId);
+    final result = await _orderAPI.getRepOrders(repId);
+    return result.fold(
+      (failure) {
+        Loggers.database.error('Failed to get rep orders: ${failure.message}');
+        return <OrderModel>[];
+      },
+      (orders) => orders,
+    );
   }
 
   void createOrder({

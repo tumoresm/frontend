@@ -1,90 +1,56 @@
-import 'package:appwrite/models.dart' as model;
-import 'package:fieldforce/apis/auth_api.dart';
-import 'package:fieldforce/apis/user_api.dart';
+import 'package:fieldforce/apis/fastapi_api.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/features/auth/model/user_model.dart';
+import 'package:fieldforce/core/session_manager.dart';
+import 'package:fieldforce/features/auth/model/verification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final authRepositoryProvider = Provider((ref) {
   return AuthRepository(
-    authAPI: ref.watch(authAPIProvider),
-    userAPI: ref.watch(userAPIProvider),
+    fastapiAPI: ref.watch(fastapiAPIProvider),
   );
 });
 
 class AuthRepository {
-  final IAuthAPI _authAPI;
-  final IUserAPI _userAPI;
+  final IFastAPIApi _fastapiAPI;
 
   AuthRepository({
-    required IAuthAPI authAPI,
-    required IUserAPI userAPI,
-  })  : _authAPI = authAPI,
-        _userAPI = userAPI;
+    required IFastAPIApi fastapiAPI,
+  }) : _fastapiAPI = fastapiAPI;
 
-  FutureEither<model.User> signUp({
+  FutureEither<void> signUp({
     required String email,
     required String password,
     required String fullName,
     required String phoneNumber,
-    String idDocumentUrl = '',
-    String role = 'Rep',
-    String address = '',
-    String profileImageUrl = '',
-    List<String> myCompaniesPortfolio = const <String>[],
+    required String? selectedAvatar,
   }) async {
-    try {
-      final res = await _authAPI.signUp(
-        email: email,
-        password: password,
-        fullName: fullName,
-        phoneNumber: phoneNumber,
-      );
-
-      return res.fold(
-        (l) => left(l),
-        (r) async {
-          // Create user document
-          final userModel = UserModel(
-            id: r.$id,
-            email: email,
-            fullName: fullName,
-            phoneNumber: phoneNumber,
-            role: role,
-            address: address,
-            idDocumentUrl: idDocumentUrl,
-            profileImageUrl: profileImageUrl,
-            verificationStatus: 'unverified',
-            myCompaniesPortfolio: myCompaniesPortfolio,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
-
-          final saveRes = await _userAPI.saveUserData(userModel);
-          return saveRes.fold(
-            (l) => left(l),
-            (r) => right(userModel as model.User),
-          );
-        },
-      );
-    } catch (e, stackTrace) {
-      return left(Failure(e.toString(), stackTrace));
-    }
+    return _fastapiAPI.registerUser(
+      email: email,
+      password: password,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+      selectedAvatar: selectedAvatar,
+    );
   }
 
-  FutureEither<model.Session> signIn({
+  FutureEither<SignInResponse> signIn({
     required String email,
     required String password,
   }) async {
-    return await _authAPI.signIn(email: email, password: password);
+    return await _fastapiAPI.signIn(
+      email: email,
+      password: password,
+    );
   }
 
-  Future<model.User?> currentUser() => _authAPI.getCurrentUser();
+  Future<Map<String, dynamic>?> currentUser() async {
+    return await SessionManager.instance.getUserData();
+  }
 
   FutureEitherVoid logout() async {
     try {
-      // Implementation for logout
+      await SessionManager.instance.clearSession();
       return right(null);
     } catch (e, stackTrace) {
       return left(Failure(e.toString(), stackTrace));
@@ -98,5 +64,23 @@ class AuthRepository {
     } catch (e, stackTrace) {
       return left(Failure(e.toString(), stackTrace));
     }
+  }
+
+  FutureEither<EmailVerificationResponse> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    return _fastapiAPI.verifyEmail(
+      email: email,
+      code: code,
+    );
+  }
+
+  FutureEither<ResendVerificationResponse> resendVerification({
+    required String email,
+  }) async {
+    return _fastapiAPI.resendVerification(
+      email: email,
+    );
   }
 }

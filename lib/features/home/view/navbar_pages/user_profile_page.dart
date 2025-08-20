@@ -1,10 +1,16 @@
-import 'package:fieldforce/common/widgets/profile_menu.dart';
+import 'package:fieldforce/common/widgets/common_widgets.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
+import 'package:fieldforce/features/profile/view/pages/portfolio_page.dart';
+import 'package:fieldforce/features/profile/view/pages/settings_page.dart';
+import 'package:fieldforce/features/profile/view/pages/security_page.dart';
+import 'package:fieldforce/features/profile/view/pages/legal_terms_page_v2.dart';
+import 'package:fieldforce/features/profile/view/pages/help_center_page.dart';
 import 'package:fieldforce/constants/verification_constants.dart';
+import 'package:fieldforce/theme/theme.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 import 'package:fieldforce/utils/loading_page.dart';
-import 'package:flutter/material.dart' hide FlatButton;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -31,15 +37,14 @@ class UserProfilePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Center(
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: user.profileImageUrl != null
-                          ? NetworkImage(user.profileImageUrl!)
-                          : null, // Placeholder for default image
-                      child: user.profileImageUrl == null
-                          ? const Icon(Icons.person, size: 50)
-                          : null,
-                    ),
+                    child: user.profileImage != null &&
+                            user.profileImage!.isNotEmpty
+                        ? CircleAvatar(
+                            radius: 50,
+                            backgroundImage:
+                                NetworkImage(user.profileImage!),
+                          )
+                        : getAvatarFromId(user.selectedAvatar, size: 100),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -56,7 +61,8 @@ class UserProfilePage extends ConsumerWidget {
                         user.verificationStatus == VerificationStatus.verified
                             ? Symbols.verified
                             : Symbols.verified_off,
-                        color: user.verificationStatus == VerificationStatus.verified
+                        color: user.verificationStatus ==
+                                VerificationStatus.verified
                             ? Colors.blue
                             : Colors.grey,
                         size: 20,
@@ -79,8 +85,9 @@ class UserProfilePage extends ConsumerWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: user.verificationStatus == VerificationStatus.pending
-                            ? Colors.orange
+                        backgroundColor: user.verificationStatus ==
+                                VerificationStatus.pending
+                            ? Colours.gradient1
                             : Colors.blue,
                         foregroundColor: Colors.white,
                       ),
@@ -121,19 +128,72 @@ class UserProfilePage extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   const Divider(),
                   //Menu ListTiles
-                  const ProfileMenuButton(
-                      title: 'Settings', icon: Symbols.settings),
-                  const ProfileMenuButton(
-                      title: 'Security', icon: Symbols.security),
-                  const ProfileMenuButton(
-                      title: 'Legal Terms', icon: Symbols.contract_edit),
-                  const ProfileMenuButton(title: 'Help', icon: Symbols.help),
-                  const SizedBox(height: 10),
+                  ProfileMenuButton(
+                    title: 'My Portfolio',
+                    icon: Symbols.business_center,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PortfolioPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Settings',
+                    icon: Symbols.settings,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Security',
+                    icon: Symbols.security,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SecurityPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Legal Terms',
+                    icon: Symbols.contract_edit,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LegalTermsPageV2(),
+                        ),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Help',
+                    icon: Symbols.help,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpCenterPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 5),
                   const Divider(),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   FlatButton(
                     onTap: () {
                       ref.read(authControllerProvider.notifier).logout(context);

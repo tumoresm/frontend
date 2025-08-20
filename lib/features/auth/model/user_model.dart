@@ -7,12 +7,13 @@ class UserModel {
   final String phoneNumber;
   final String role;
   final String address;
-  final String? idDocumentUrl;
-  final String? profileImageUrl;
+  final String? idNumber;
+  final String? profileImage;
+  final String? selectedAvatar; // Avatar identifier for avatar_plus package
   final String verificationStatus;
-  final List<String> myCompaniesPortfolio;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final List<String>? myCompaniesPortfolio;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const UserModel({
     required this.id,
@@ -21,12 +22,13 @@ class UserModel {
     required this.phoneNumber,
     required this.role,
     required this.address,
-    this.idDocumentUrl,
-    this.profileImageUrl,
+    this.idNumber,
+    this.profileImage,
+    this.selectedAvatar,
     required this.verificationStatus,
-    required this.myCompaniesPortfolio,
-    required this.createdAt,
-    required this.updatedAt,
+    this.myCompaniesPortfolio,
+    this.createdAt,
+    this.updatedAt,
   });
 
   UserModel copyWith({
@@ -36,8 +38,9 @@ class UserModel {
     String? phoneNumber,
     String? role,
     String? address,
-    String? idDocumentUrl,
-    String? profileImageUrl,
+    String? idNumber,
+    String? profileImage,
+    String? selectedAvatar,
     String? verificationStatus,
     List<String>? myCompaniesPortfolio,
     DateTime? createdAt,
@@ -50,8 +53,9 @@ class UserModel {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       role: role ?? this.role,
       address: address ?? this.address,
-      idDocumentUrl: idDocumentUrl ?? this.idDocumentUrl,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      idNumber: idNumber ?? this.idNumber,
+      profileImage: profileImage ?? this.profileImage,
+      selectedAvatar: selectedAvatar ?? this.selectedAvatar,
       verificationStatus: verificationStatus ?? this.verificationStatus,
       myCompaniesPortfolio: myCompaniesPortfolio ?? this.myCompaniesPortfolio,
       createdAt: createdAt ?? this.createdAt,
@@ -67,12 +71,11 @@ class UserModel {
       'phoneNumber': phoneNumber,
       'role': role,
       'address': address,
-      'idDocumentUrl': idDocumentUrl,
-      'profileImageUrl': profileImageUrl,
+      'idNumber': idNumber,
+      'profileImage': profileImage,
+      'selectedAvatar': selectedAvatar,
       'verificationStatus': verificationStatus,
       'myCompaniesPortfolio': myCompaniesPortfolio,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
@@ -84,12 +87,13 @@ class UserModel {
       phoneNumber: map['phoneNumber']?.toString() ?? '',
       role: map['role']?.toString() ?? 'Rep',
       address: map['address']?.toString() ?? '',
-      idDocumentUrl: map['idDocumentUrl']?.toString(),
-      profileImageUrl: map['profileImageUrl']?.toString(),
+      idNumber: map['idNumber']?.toString(),
+      profileImage: map['profileImage']?.toString(),
+      selectedAvatar: map['selectedAvatar']?.toString(),
       verificationStatus: map['verificationStatus']?.toString() ?? 'unverified',
-      myCompaniesPortfolio: List<String>.from(map['myCompaniesPortfolio'] ?? []),
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(map['updatedAt']?.toString() ?? '') ?? DateTime.now(),
+      myCompaniesPortfolio: map['myCompaniesPortfolio'] != null ? List<String>.from(map['myCompaniesPortfolio']) : null,
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? ''),
+      updatedAt: DateTime.tryParse(map['updatedAt']?.toString() ?? ''),
     );
   }
 
@@ -113,8 +117,9 @@ class UserModel {
         other.phoneNumber == phoneNumber &&
         other.role == role &&
         other.address == address &&
-        other.idDocumentUrl == idDocumentUrl &&
-        other.profileImageUrl == profileImageUrl &&
+        other.idNumber == idNumber &&
+        other.profileImage == profileImage &&
+        other.selectedAvatar == selectedAvatar &&
         other.verificationStatus == verificationStatus;
   }
 
@@ -126,8 +131,9 @@ class UserModel {
         phoneNumber.hashCode ^
         role.hashCode ^
         address.hashCode ^
-        idDocumentUrl.hashCode ^
-        profileImageUrl.hashCode ^
+        idNumber.hashCode ^
+        profileImage.hashCode ^
+        selectedAvatar.hashCode ^
         verificationStatus.hashCode;
   }
 }

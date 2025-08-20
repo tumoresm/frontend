@@ -2,8 +2,10 @@ import 'package:fieldforce/utils/custom_field.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
-import 'package:flutter/material.dart' hide FlatButton;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class VerificationPage extends ConsumerStatefulWidget {
   static route() => MaterialPageRoute(
@@ -17,22 +19,29 @@ class VerificationPage extends ConsumerStatefulWidget {
 
 class _VerificationPageState extends ConsumerState<VerificationPage> {
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _idDocumentUrlController =
-      TextEditingController();
-  final TextEditingController _profileImageUrlController =
-      TextEditingController();
+  final TextEditingController _idNumberController = TextEditingController();
 
   String _selectedRole = 'Rep';
   final List<String> _roles = ['Rep', 'Admin', 'Manager'];
   final _formKey = GlobalKey<FormState>();
-  String? _profileImagePreviewUrl;
+  File? _profileImageFile;
 
   @override
   void dispose() {
     _addressController.dispose();
-    _idDocumentUrlController.dispose();
-    _profileImageUrlController.dispose();
+    _idNumberController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickProfileImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _profileImageFile = File(image.path);
+      });
+    }
   }
 
   void _submitVerificationInfo() async {
@@ -48,10 +57,8 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
                 .updateUserProfile(
                   userId: user.id,
                   address: _addressController.text,
-                  idDocumentUrl: _idDocumentUrlController.text,
-                  profileImageUrl: _profileImageUrlController.text.isEmpty
-                      ? ''
-                      : _profileImageUrlController.text,
+                  idNumber: _idNumberController.text,
+                  profileImage: _profileImageFile, // Pass the File object
                   role: _selectedRole,
                   context: context,
                 );
@@ -95,44 +102,26 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CustomTextField(
-          controller: _profileImageUrlController,
-          hintText: 'Profile Image URL (Optional)',
-          keyboardType: TextInputType.url,
-          validator: (value) {
-            // Profile image URL is optional
-            if (value != null && value.isNotEmpty) {
-              final uri = Uri.tryParse(value);
-              if (uri == null || !uri.isAbsolute) {
-                return 'Enter a valid URL';
-              }
-            }
-            return null;
-          },
+        // Display selected image or placeholder
+        Center(
+          child: _profileImageFile != null
+              ? CircleAvatar(
+                  radius: 50,
+                  backgroundImage: FileImage(_profileImageFile!),
+                )
+              : CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey.shade200,
+                  child: Icon(Icons.person, size: 50, color: Colors.grey.shade400),
+                ),
         ),
-        const SizedBox(height: 8.0),
-        Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _profileImagePreviewUrl = _profileImageUrlController.text;
-                });
-              },
-              child: const Text('Preview'),
-            ),
-            const SizedBox(width: 16.0),
-            _profileImagePreviewUrl != null &&
-                    _profileImagePreviewUrl!.isNotEmpty
-                ? Image.network(
-                    _profileImagePreviewUrl!,
-                    width: 60,
-                    height: 60,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.broken_image),
-                  )
-                : const SizedBox.shrink(),
-          ],
+        const SizedBox(height: 16.0),
+        Center(
+          child: ElevatedButton.icon(
+            onPressed: _pickProfileImage,
+            icon: const Icon(Icons.camera_alt),
+            label: const Text('Pick Profile Image'),
+          ),
         ),
       ],
     );
@@ -191,16 +180,15 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
               ),
               const SizedBox(height: 16.0),
               CustomTextField(
-                controller: _idDocumentUrlController,
-                hintText: 'ID Document URL',
-                keyboardType: TextInputType.url,
+                controller: _idNumberController,
+                hintText: 'ID Number',
+                keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'ID Document URL is required for verification';
+                    return 'ID Number is required for verification';
                   }
-                  final uri = Uri.tryParse(value);
-                  if (uri == null || !uri.isAbsolute) {
-                    return 'Enter a valid URL';
+                  if (!RegExp(r'^\d{13}$').hasMatch(value)) {
+                    return 'ID Number must be a 13-digit number';
                   }
                   return null;
                 },

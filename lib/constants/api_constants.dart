@@ -21,7 +21,7 @@ class ApiConstants {
   static String get loginEndpoint => '$baseUrl/auth/login';
   
   // User profile endpoints
-  static String updateProfileEndpoint(String userId) => '$baseUrl/users/$userId';
+  static String get updateProfileEndpoint => '$baseUrl/users/me';
   static String getUserProfileEndpoint(String userId) => '$baseUrl/users/$userId';
 
   // Request timeouts

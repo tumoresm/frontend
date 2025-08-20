@@ -1,0 +1,94 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2024-01-15T00:00:00.000Z",
+  "documents": [
+    {
+      "id": "terms_of_service",
+      "title": "Terms of Service",
+      "version": "1.2",
+      "lastUpdated": 1705276800000,
+      "category": "terms_and_policies",
+      "isRequired": true,
+      "summary": "Terms governing the use of FieldForce services",
+      "tags": ["terms", "service", "legal"],
+      "content": "FIELDFORCE TERMS OF SERVICE\n\nLast Updated: January 2024\n\n1. ACCEPTANCE OF TERMS\nBy accessing and using the FieldForce application, you accept and agree to be bound by the terms and provision of this agreement.\n\n2. DESCRIPTION OF SERVICE\nFieldForce is a platform that connects field sales representatives with companies seeking sales services.\n\n3. USER RESPONSIBILITIES\n- Provide accurate and complete information\n- Maintain the confidentiality of your account\n- Use the service in compliance with all applicable laws\n- Respect the rights of other users and companies\n\n4. PROHIBITED ACTIVITIES\n- Fraudulent or deceptive practices\n- Harassment or abuse of other users\n- Violation of intellectual property rights\n- Unauthorized access to the system\n\n5. COMMISSION AND PAYMENTS\n- Commissions are paid according to the agreed terms with each company\n- FieldForce may charge service fees as disclosed\n- Payment processing may take 2-5 business days\n\n6. TERMINATION\nEither party may terminate this agreement at any time with proper notice.\n\n7. LIMITATION OF LIABILITY\nFieldForce shall not be liable for any indirect, incidental, or consequential damages.\n\n8. GOVERNING LAW\nThis agreement shall be governed by the laws of the State of New York.\n\nFor complete terms, please visit our website or contact legal@fieldforce.com"
+    },
+    {
+      "id": "privacy_policy",
+      "title": "Privacy Policy",
+      "version": "1.1",
+      "lastUpdated": 1705276800000,
+      "category": "privacy",
+      "isRequired": true,
+      "summary": "How we collect, use, and protect your personal information",
+      "tags": ["privacy", "data", "protection"],
+      "content": "FIELDFORCE PRIVACY POLICY\n\nLast Updated: January 2024\n\n1. INFORMATION WE COLLECT\n- Personal information (name, email, phone number)\n- Professional information (work history, skills)\n- Usage data and analytics\n- Location data (with your consent)\n\n2. HOW WE USE YOUR INFORMATION\n- To provide and improve our services\n- To process payments and commissions\n- To communicate with you about your account\n- To ensure security and prevent fraud\n\n3. INFORMATION SHARING\nWe do not sell your personal information. We may share information:\n- With companies you choose to work with\n- With service providers who assist our operations\n- When required by law or to protect our rights\n\n4. DATA SECURITY\nWe implement appropriate security measures to protect your information against unauthorized access, alteration, disclosure, or destruction.\n\n5. YOUR RIGHTS\n- Access your personal information\n- Correct inaccurate information\n- Delete your account and data\n- Opt-out of marketing communications\n\n6. COOKIES AND TRACKING\nWe use cookies and similar technologies to improve your experience and analyze usage patterns.\n\n7. CHILDREN'S PRIVACY\nOur service is not intended for children under 18 years of age.\n\n8. INTERNATIONAL TRANSFERS\nYour information may be transferred to and processed in countries other than your own.\n\n9. CHANGES TO THIS POLICY\nWe may update this policy from time to time. We will notify you of any material changes.\n\nFor questions about this policy, contact privacy@fieldforce.com"
+    },
+    {
+      "id": "user_agreement",
+      "title": "User Agreement",
+      "version": "1.0",
+      "lastUpdated": 1705276800000,
+      "category": "terms_and_policies",
+      "isRequired": true,
+      "summary": "Agreement between users and FieldForce",
+      "tags": ["agreement", "user", "contract"],
+      "content": "FIELDFORCE USER AGREEMENT\n\nLast Updated: January 2024\n\n1. ELIGIBILITY\nTo use FieldForce, you must:\n- Be at least 18 years old\n- Have the legal capacity to enter into contracts\n- Provide accurate and complete information\n- Comply with all applicable laws\n\n2. ACCOUNT REGISTRATION\n- You are responsible for maintaining account security\n- You must verify your identity as required\n- One account per person is permitted\n- You must keep your information current\n\n3. PROFESSIONAL CONDUCT\nAs a FieldForce representative, you agree to:\n- Maintain professional standards\n- Represent companies honestly and accurately\n- Provide excellent customer service\n- Follow all company-specific guidelines\n\n4. INTELLECTUAL PROPERTY\n- FieldForce retains all rights to the platform\n- You retain rights to your original content\n- You grant us license to use your content as needed\n- Respect third-party intellectual property rights\n\n5. DISPUTE RESOLUTION\n- First attempt to resolve disputes directly\n- Mediation may be required for unresolved issues\n- Binding arbitration for legal disputes\n- Class action waiver applies\n\n6. MODIFICATIONS\nWe may modify this agreement with notice to users. Continued use constitutes acceptance of changes.\n\n7. SEVERABILITY\nIf any provision is found unenforceable, the remainder of the agreement remains in effect.\n\nFor questions, contact legal@fieldforce.com"
+    },
+    {
+      "id": "cookie_policy",
+      "title": "Cookie Policy",
+      "version": "1.0",
+      "lastUpdated": 1705276800000,
+      "category": "privacy",
+      "isRequired": false,
+      "summary": "How we use cookies and tracking technologies",
+      "tags": ["cookies", "tracking", "privacy"],
+      "content": "FIELDFORCE COOKIE POLICY\n\nLast Updated: January 2024\n\n1. WHAT ARE COOKIES\nCookies are small text files stored on your device when you visit our website or use our app.\n\n2. TYPES OF COOKIES WE USE\n\nEssential Cookies:\n- Required for the service to function\n- Cannot be disabled\n- Include authentication and security cookies\n\nAnalytics Cookies:\n- Help us understand how you use our service\n- Provide insights for improvements\n- Can be disabled in settings\n\nFunctional Cookies:\n- Remember your preferences\n- Enhance your user experience\n- Can be disabled in settings\n\nMarketing Cookies:\n- Used for targeted advertising\n- Track your interests and behavior\n- Can be disabled in settings\n\n3. THIRD-PARTY COOKIES\nWe may use third-party services that set their own cookies:\n- Google Analytics\n- Payment processors\n- Customer support tools\n\n4. MANAGING COOKIES\nYou can control cookies through:\n- Your browser settings\n- Our app settings\n- Third-party opt-out tools\n\n5. MOBILE APP DATA\nOur mobile app may collect similar information through:\n- Device identifiers\n- App usage analytics\n- Crash reporting tools\n\n6. UPDATES\nThis policy may be updated to reflect changes in our practices or applicable laws.\n\nFor questions about cookies, contact privacy@fieldforce.com"
+    },
+    {
+      "id": "rep_agreement",
+      "title": "Representative Agreement",
+      "version": "1.1",
+      "lastUpdated": 1705276800000,
+      "category": "rep_agreements",
+      "isRequired": true,
+      "summary": "Terms for field sales representatives",
+      "tags": ["representative", "sales", "commission"],
+      "content": "FIELDFORCE REPRESENTATIVE AGREEMENT\n\nLast Updated: January 2024\n\n1. INDEPENDENT CONTRACTOR STATUS\nYou are an independent contractor, not an employee of FieldForce or any partner company.\n\n2. SERVICES PROVIDED\nAs a FieldForce representative, you will:\n- Generate sales leads and opportunities\n- Present products and services to customers\n- Process orders through the platform\n- Maintain customer relationships\n\n3. COMMISSION STRUCTURE\n- Commissions vary by company and product\n- Rates are clearly displayed before accepting work\n- Payments processed within 2-5 business days\n- FieldForce may charge platform fees\n\n4. PERFORMANCE STANDARDS\n- Maintain professional conduct at all times\n- Meet quality standards set by partner companies\n- Respond promptly to customer inquiries\n- Accurate reporting of all activities\n\n5. TERRITORY AND EXCLUSIVITY\n- No exclusive territories unless specifically agreed\n- Multiple reps may work in the same area\n- Respect other reps' customer relationships\n- Follow company-specific territory rules\n\n6. TRAINING AND SUPPORT\n- Complete required training programs\n- Stay updated on product information\n- Use provided marketing materials appropriately\n- Participate in ongoing education\n\n7. CONFIDENTIALITY\n- Protect confidential company information\n- Do not share customer data inappropriately\n- Maintain trade secret confidentiality\n- Report security breaches immediately\n\n8. TERMINATION\n- Either party may terminate with notice\n- Outstanding commissions will be paid\n- Return any company materials\n- Confidentiality obligations continue\n\nFor questions, contact reps@fieldforce.com"
+    },
+    {
+      "id": "commission_structure",
+      "title": "Commission Structure",
+      "version": "1.0",
+      "lastUpdated": 1705276800000,
+      "category": "rep_agreements",
+      "isRequired": false,
+      "summary": "How commissions are calculated and paid",
+      "tags": ["commission", "payment", "structure"],
+      "content": "FIELDFORCE COMMISSION STRUCTURE\n\nLast Updated: January 2024\n\n1. COMMISSION BASICS\n- Commissions are earned on completed, paid orders\n- Rates vary by company, product, and volume\n- Clearly displayed before accepting assignments\n- Paid within 2-5 business days of order completion\n\n2. COMMISSION TYPES\n\nFlat Rate:\n- Fixed amount per order\n- Common for simple products\n- Easy to calculate and predict\n\nPercentage:\n- Percentage of order value\n- Typical range: 2-15%\n- Higher for complex sales\n\nTiered:\n- Increases with volume\n- Rewards high performers\n- Monthly or quarterly tiers\n\n3. PAYMENT SCHEDULE\n- Weekly payment cycles\n- Minimum payout threshold: $25\n- Direct deposit to verified bank account\n- Payment history available in app\n\n4. DEDUCTIONS\nFieldForce may deduct:\n- Platform service fees (typically 3-5%)\n- Payment processing fees\n- Chargebacks for returned orders\n- Compliance violations\n\n5. BONUSES AND INCENTIVES\n- Performance bonuses available\n- Company-specific incentives\n- Seasonal promotions\n- Referral bonuses for new reps\n\n6. TAX RESPONSIBILITIES\n- You are responsible for all taxes\n- 1099 forms provided annually\n- Consult tax professional for advice\n- Keep detailed records\n\n7. DISPUTES\n- Report commission discrepancies immediately\n- Review process within 30 days\n- Appeal process available\n- Final decisions binding\n\nFor commission questions, contact payments@fieldforce.com"
+    },
+    {
+      "id": "nda",
+      "title": "Non-Disclosure Agreement",
+      "version": "1.0",
+      "lastUpdated": 1705276800000,
+      "category": "rep_agreements",
+      "isRequired": true,
+      "summary": "Confidentiality requirements for representatives",
+      "tags": ["nda", "confidentiality", "agreement"],
+      "content": "FIELDFORCE NON-DISCLOSURE AGREEMENT\n\nLast Updated: January 2024\n\n1. CONFIDENTIAL INFORMATION\nConfidential information includes:\n- Customer lists and contact information\n- Pricing strategies and commission rates\n- Product development information\n- Business strategies and plans\n- Technical specifications\n- Financial information\n\n2. OBLIGATIONS\nYou agree to:\n- Keep all confidential information secret\n- Use information only for authorized purposes\n- Not disclose to unauthorized parties\n- Protect information with reasonable care\n- Return information upon termination\n\n3. EXCEPTIONS\nThis agreement does not apply to information that:\n- Is publicly available\n- Was known before disclosure\n- Is independently developed\n- Is required to be disclosed by law\n\n4. DURATION\n- Confidentiality obligations continue indefinitely\n- Survives termination of other agreements\n- Applies to all information received\n- Covers information from all sources\n\n5. REMEDIES\nBreach of this agreement may result in:\n- Immediate termination\n- Legal action for damages\n- Injunctive relief\n- Recovery of attorney fees\n\n6. THIRD PARTIES\n- Do not disclose to family or friends\n- Ensure any assistants sign similar agreements\n- Protect information in all communications\n- Use secure methods for data handling\n\n7. RETURN OF INFORMATION\nUpon termination or request:\n- Return all confidential materials\n- Delete electronic copies\n- Confirm destruction in writing\n- Continue confidentiality obligations\n\nFor questions about confidentiality, contact legal@fieldforce.com"
+    },
+    {
+      "id": "gdpr_rights",
+      "title": "GDPR Rights",
+      "version": "1.0",
+      "lastUpdated": 1705276800000,
+      "category": "compliance",
+      "isRequired": false,
+      "summary": "Your data protection rights under GDPR",
+      "tags": ["gdpr", "rights", "data protection"],
+      "content": "YOUR GDPR RIGHTS\n\nUnder the General Data Protection Regulation (GDPR), you have the following rights:\n\n1. RIGHT TO BE INFORMED\n- Know what personal data we collect\n- Understand how we use your data\n- Know who we share data with\n- Understand your rights\n\n2. RIGHT OF ACCESS\n- Request a copy of your personal data\n- Receive information about processing\n- Get details about data sharing\n- Understand automated decision-making\n\n3. RIGHT TO RECTIFICATION\n- Correct inaccurate personal data\n- Complete incomplete data\n- Update outdated information\n- Fix errors in your profile\n\n4. RIGHT TO ERASURE\n- Request deletion of your data\n- \"Right to be forgotten\"\n- Applies when data no longer needed\n- Subject to legal requirements\n\n5. RIGHT TO RESTRICT PROCESSING\n- Limit how we use your data\n- Temporary restriction available\n- While disputes are resolved\n- When accuracy is contested\n\n6. RIGHT TO DATA PORTABILITY\n- Receive your data in structured format\n- Transfer data to another service\n- Machine-readable format provided\n- Applies to automated processing\n\n7. RIGHT TO OBJECT\n- Object to processing for marketing\n- Object to automated decision-making\n- Object to profiling\n- Opt-out of data processing\n\n8. RIGHTS RELATED TO AUTOMATED DECISION-MAKING\n- Not subject to automated decisions\n- Request human intervention\n- Express your point of view\n- Contest automated decisions\n\nTo exercise your rights, contact privacy@fieldforce.com"
+    }
+  ]
+}

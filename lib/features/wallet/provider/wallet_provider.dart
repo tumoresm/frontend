@@ -3,6 +3,8 @@ import 'package:fieldforce/apis/transaction_api.dart';
 import 'package:fieldforce/apis/bank_account_api.dart';
 import 'package:fieldforce/apis/withdrawal_request_api.dart';
 import 'package:fieldforce/core/utils.dart';
+import 'package:fieldforce/core/logger.dart';
+import 'package:fieldforce/core/providers.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/wallet/model/wallet_models.dart';
 import 'package:flutter/material.dart';
@@ -10,53 +12,95 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Wallet Data Providers
 final getUserWalletProvider = FutureProvider((ref) async {
-  final user = ref.watch(currentUserProvider).value;
-  if (user == null) return null;
-  
-  final walletController = ref.watch(walletControllerProvider.notifier);
-  return walletController.getUserWallet(user.$id);
-});
+  try {
+    final user = ref.watch(currentUserProvider).value;
+    if (user == null) return null;
+    
+    final userId = user['userId'] as String?;
+    if (userId == null) return null;
+    
+    final walletController = ref.watch(walletControllerProvider.notifier);
+    return await walletController.getUserWallet(userId);
+  } catch (e) {
+    Loggers.database.warning('Wallet API not available (Appwrite auth issue): $e');
+    Loggers.database.info('Returning null wallet until migration to FastAPI is complete');
+    return null;
+  }
+}, name: 'getUserWalletProvider');
 
 final getUserTransactionsProvider = FutureProvider((ref) async {
-  final user = ref.watch(currentUserProvider).value;
-  if (user == null) return <TransactionModel>[];
-  
-  final walletController = ref.watch(walletControllerProvider.notifier);
-  return walletController.getUserTransactions(user.$id);
-});
+  try {
+    final user = ref.watch(currentUserProvider).value;
+    if (user == null) return <TransactionModel>[];
+    
+    final userId = user['userId'] as String?;
+    if (userId == null) return <TransactionModel>[];
+    
+    final walletController = ref.watch(walletControllerProvider.notifier);
+    return await walletController.getUserTransactions(userId);
+  } catch (e) {
+    Loggers.database.warning('Transactions API not available (Appwrite auth issue): $e');
+    Loggers.database.info('Returning empty transactions list until migration to FastAPI is complete');
+    return <TransactionModel>[];
+  }
+}, name: 'getUserTransactionsProvider');
 
 final getUserBankAccountsProvider = FutureProvider((ref) async {
-  final user = ref.watch(currentUserProvider).value;
-  if (user == null) return <BankAccountModel>[];
-  
-  final walletController = ref.watch(walletControllerProvider.notifier);
-  return walletController.getUserBankAccounts(user.$id);
-});
+  try {
+    final user = ref.watch(currentUserProvider).value;
+    if (user == null) return <BankAccountModel>[];
+    
+    final userId = user['userId'] as String?;
+    if (userId == null) return <BankAccountModel>[];
+    
+    final walletController = ref.watch(walletControllerProvider.notifier);
+    return await walletController.getUserBankAccounts(userId);
+  } catch (e) {
+    Loggers.database.warning('Bank accounts API not available (Appwrite auth issue): $e');
+    Loggers.database.info('Returning empty bank accounts list until migration to FastAPI is complete');
+    return <BankAccountModel>[];
+  }
+}, name: 'getUserBankAccountsProvider');
 
 final getUserWithdrawalRequestsProvider = FutureProvider((ref) async {
-  final user = ref.watch(currentUserProvider).value;
-  if (user == null) return <WithdrawalRequestModel>[];
-  
-  final walletController = ref.watch(walletControllerProvider.notifier);
-  return walletController.getUserWithdrawalRequests(user.$id);
-});
+  try {
+    final user = ref.watch(currentUserProvider).value;
+    if (user == null) return <WithdrawalRequestModel>[];
+    
+    final userId = user['userId'] as String?;
+    if (userId == null) return <WithdrawalRequestModel>[];
+    
+    final walletController = ref.watch(walletControllerProvider.notifier);
+    return await walletController.getUserWithdrawalRequests(userId);
+  } catch (e) {
+    Loggers.database.warning('Withdrawal requests API not available (Appwrite auth issue): $e');
+    Loggers.database.info('Returning empty withdrawal requests list until migration to FastAPI is complete');
+    return <WithdrawalRequestModel>[];
+  }
+}, name: 'getUserWithdrawalRequestsProvider');
 
 // Filtered Transaction Providers
 final getTransactionsByTypeProvider = FutureProvider.family<List<TransactionModel>, TransactionType>((ref, type) async {
   final user = ref.watch(currentUserProvider).value;
   if (user == null) return <TransactionModel>[];
   
+  final userId = user['userId'] as String?;
+  if (userId == null) return <TransactionModel>[];
+  
   final walletController = ref.watch(walletControllerProvider.notifier);
-  return walletController.getTransactionsByType(user.$id, type);
+  return walletController.getTransactionsByType(userId, type);
 });
 
 final getTransactionsByDateRangeProvider = FutureProvider.family<List<TransactionModel>, Map<String, DateTime>>((ref, dateRange) async {
   final user = ref.watch(currentUserProvider).value;
   if (user == null) return <TransactionModel>[];
   
+  final userId = user['userId'] as String?;
+  if (userId == null) return <TransactionModel>[];
+  
   final walletController = ref.watch(walletControllerProvider.notifier);
   return walletController.getTransactionsByDateRange(
-    user.$id,
+    userId,
     dateRange['startDate']!,
     dateRange['endDate']!,
   );

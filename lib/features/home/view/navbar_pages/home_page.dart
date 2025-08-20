@@ -2,6 +2,7 @@ import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/common/widgets/notifications_dialog.dart';
 import 'package:fieldforce/features/home/view/widgets/time_filter_buttons.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
+import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
 import 'package:fieldforce/theme/app_colours.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final currentUserDetails = ref.watch(currentUserDetailsProvider);
     final orders = ref.watch(getOrdersProvider);
+    final userWallet = ref.watch(getUserWalletProvider);
 
     return Scaffold(
       backgroundColor: kRed,
@@ -99,6 +101,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             ),
                           ),
                           const Spacer(),
+                          //Notification icon
                           IconButton(
                             onPressed: () {
                               showDialog(
@@ -118,13 +121,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ),
                     // Spacer for EarningsCard
-                    const SizedBox(height: 80),
+                    const SizedBox(height: 55),
                     // Main Content Section
                     Expanded(
                       child: Container(
-                        margin: const EdgeInsets.only(top: 87),
+                        margin: const EdgeInsets.only(top: 60),
                         decoration: const BoxDecoration(
-                          color: Colours.backgroundColor,
+                          color: Color.fromRGBO(18, 18, 18, 0.8),
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(20),
                             topRight: Radius.circular(20),
@@ -132,90 +135,93 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ),
                         child: Column(
                           children: [
-                            const SizedBox(height: 30),
+                            const SizedBox(height: 20),
                             const Text(
                               "Total Orders",
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                             const SizedBox(height: 10),
                             // Chart Section with fixed height
-                            SizedBox(
-                              height: 200,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: LineChart(
-                                  LineChartData(
-                                    gridData: const FlGridData(show: false),
-                                    titlesData: FlTitlesData(
-                                      leftTitles: const AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
-                                      bottomTitles: AxisTitles(
-                                        sideTitles: SideTitles(
-                                          showTitles: true,
-                                          getTitlesWidget: (value, meta) {
-                                            const titles = [
-                                              'S',
-                                              'M',
-                                              'T',
-                                              'W',
-                                              'T',
-                                              'F',
-                                              'S'
-                                            ];
-                                            final index = value.toInt();
-                                            if (index >= 0 &&
-                                                index < titles.length) {
-                                              return Text(
-                                                titles[index],
-                                                style: const TextStyle(
-                                                  color: Colours.greyColor,
-                                                ),
-                                              );
-                                            }
-                                            return const Text("");
-                                          },
-                                          reservedSize: 22,
-                                          interval: 1,
+                            Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: SizedBox(
+                                height: 160,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: LineChart(
+                                    LineChartData(
+                                      gridData: const FlGridData(show: false),
+                                      titlesData: FlTitlesData(
+                                        leftTitles: const AxisTitles(
+                                          sideTitles:
+                                              SideTitles(showTitles: false),
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            getTitlesWidget: (value, meta) {
+                                              const titles = [
+                                                'S',
+                                                'M',
+                                                'T',
+                                                'W',
+                                                'T',
+                                                'F',
+                                                'S'
+                                              ];
+                                              final index = value.toInt();
+                                              if (index >= 0 &&
+                                                  index < titles.length) {
+                                                return Text(
+                                                  titles[index],
+                                                  style: const TextStyle(
+                                                    color: Colours.greyColor,
+                                                  ),
+                                                );
+                                              }
+                                              return const Text("");
+                                            },
+                                            reservedSize: 22,
+                                            interval: 1,
+                                          ),
+                                        ),
+                                        rightTitles: const AxisTitles(
+                                          sideTitles:
+                                              SideTitles(showTitles: false),
+                                        ),
+                                        topTitles: const AxisTitles(
+                                          sideTitles:
+                                              SideTitles(showTitles: false),
                                         ),
                                       ),
-                                      rightTitles: const AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
-                                      topTitles: const AxisTitles(
-                                        sideTitles:
-                                            SideTitles(showTitles: false),
-                                      ),
+                                      borderData: FlBorderData(show: false),
+                                      lineBarsData: [
+                                        LineChartBarData(
+                                          spots: const [
+                                            FlSpot(0, 1),
+                                            FlSpot(1, 2),
+                                            FlSpot(2, 0),
+                                            FlSpot(3, 2),
+                                            FlSpot(4, 3),
+                                            FlSpot(5, 5),
+                                            FlSpot(6, 7),
+                                          ],
+                                          isCurved: true,
+                                          color: kPrimary,
+                                          barWidth: 2,
+                                          dotData: const FlDotData(show: false),
+                                          belowBarData: BarAreaData(
+                                            show: true,
+                                            color: Colours.gradient3
+                                                .withOpacity(0.07),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    borderData: FlBorderData(show: false),
-                                    lineBarsData: [
-                                      LineChartBarData(
-                                        spots: const [
-                                          FlSpot(0, 1),
-                                          FlSpot(1, 2),
-                                          FlSpot(2, 0),
-                                          FlSpot(3, 2),
-                                          FlSpot(4, 3),
-                                          FlSpot(5, 5),
-                                          FlSpot(6, 7),
-                                        ],
-                                        isCurved: true,
-                                        color: kPrimary,
-                                        barWidth: 2,
-                                        dotData: const FlDotData(show: false),
-                                        belowBarData: BarAreaData(
-                                          show: true,
-                                          color: Colours.gradient3
-                                              .withOpacity(0.07),
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ),
                               ),
@@ -258,11 +264,23 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Center(child: Text(error.toString())),
             ),
             // Positioned EarningsCard
-            const Positioned(
+            Positioned(
               top: 80,
-              left: 25,
-              right: 25,
-              child: EarningsCard(),
+              left: 16,
+              right: 16,
+              child: userWallet.when(
+                data: (wallet) => EarningsCard(
+                  totalEarnings: wallet?.totalEarnings,
+                  totalPaid: wallet != null
+                      ? wallet.totalEarnings -
+                          wallet.currentBalance -
+                          wallet.pendingEarnings
+                      : null,
+                  isLoading: false,
+                ),
+                loading: () => const EarningsCard(isLoading: true),
+                error: (error, stack) => const EarningsCard(),
+              ),
             ),
           ],
         ),
