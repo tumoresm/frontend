@@ -1,1 +1,490 @@
-import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';\nimport 'package:fieldforce/features/wallet/model/wallet_models.dart';\nimport 'package:fieldforce/theme/app_colours.dart';\nimport 'package:flutter/material.dart';\nimport 'package:flutter_riverpod/flutter_riverpod.dart';\nimport 'package:material_symbols_icons/symbols.dart';\n\nclass TransactionHistoryPage extends ConsumerStatefulWidget {\n  const TransactionHistoryPage({super.key});\n\n  @override\n  ConsumerState<TransactionHistoryPage> createState() => _TransactionHistoryPageState();\n}\n\nclass _TransactionHistoryPageState extends ConsumerState<TransactionHistoryPage> {\n  String _selectedFilter = 'all';\n  String _selectedPeriod = 'all';\n  final TextEditingController _searchController = TextEditingController();\n\n  @override\n  void dispose() {\n    _searchController.dispose();\n    super.dispose();\n  }\n\n  // Simple date formatting function to replace DateFormat\n  String _formatDate(DateTime date) {\n    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',\n                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n    return '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}, ${date.year}';\n  }\n\n  String _formatTime(DateTime date) {\n    final hour = date.hour.toString().padLeft(2, '0');\n    final minute = date.minute.toString().padLeft(2, '0');\n    return '$hour:$minute';\n  }\n\n  List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {\n    List<TransactionModel> filtered = transactions;\n\n    // Filter by type\n    if (_selectedFilter != 'all') {\n      filtered = filtered.where((transaction) {\n        return transaction.type.value == _selectedFilter;\n      }).toList();\n    }\n\n    // Filter by period\n    if (_selectedPeriod != 'all') {\n      final now = DateTime.now();\n      DateTime startDate;\n      \n      switch (_selectedPeriod) {\n        case 'today':\n          startDate = DateTime(now.year, now.month, now.day);\n          break;\n        case 'week':\n          startDate = now.subtract(const Duration(days: 7));\n          break;\n        case 'month':\n          startDate = DateTime(now.year, now.month, 1);\n          break;\n        case 'year':\n          startDate = DateTime(now.year, 1, 1);\n          break;\n        default:\n          startDate = DateTime(2000); // Very old date for 'all'\n      }\n      \n      filtered = filtered.where((transaction) {\n        return transaction.createdAt.isAfter(startDate);\n      }).toList();\n    }\n\n    // Filter by search query\n    final query = _searchController.text.toLowerCase();\n    if (query.isNotEmpty) {\n      filtered = filtered.where((transaction) {\n        return transaction.description.toLowerCase().contains(query) ||\n               transaction.type.value.toLowerCase().contains(query);\n      }).toList();\n    }\n\n    return filtered;\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final transactionsAsync = ref.watch(getUserTransactionsProvider);\n\n    return Scaffold(\n      backgroundColor: Colours.backgroundColor,\n      appBar: AppBar(\n        backgroundColor: Colours.backgroundColor,\n        elevation: 0,\n        title: const Text(\n          'Transaction History',\n          style: TextStyle(\n            color: Colours.whiteColor,\n            fontSize: 20,\n            fontWeight: FontWeight.w600,\n          ),\n        ),\n        leading: IconButton(\n          onPressed: () => Navigator.pop(context),\n          icon: const Icon(\n            Symbols.arrow_back,\n            color: Colours.whiteColor,\n          ),\n        ),\n        actions: [\n          IconButton(\n            onPressed: () {\n              ref.refresh(getUserTransactionsProvider);\n            },\n            icon: const Icon(\n              Symbols.refresh,\n              color: Colours.whiteColor,\n            ),\n          ),\n        ],\n      ),\n      body: Column(\n        children: [\n          // Search and Filters\n          Container(\n            padding: const EdgeInsets.all(16),\n            child: Column(\n              children: [\n                // Search Bar\n                TextField(\n                  controller: _searchController,\n                  style: const TextStyle(color: Colours.whiteColor),\n                  decoration: InputDecoration(\n                    hintText: 'Search transactions...',\n                    hintStyle: TextStyle(\n                      color: Colours.whiteColor.withOpacity(0.5),\n                    ),\n                    prefixIcon: const Icon(\n                      Symbols.search,\n                      color: kPrimary,\n                    ),\n                    border: OutlineInputBorder(\n                      borderRadius: BorderRadius.circular(12),\n                      borderSide: BorderSide(\n                        color: Colours.whiteColor.withOpacity(0.3),\n                      ),\n                    ),\n                    enabledBorder: OutlineInputBorder(\n                      borderRadius: BorderRadius.circular(12),\n                      borderSide: BorderSide(\n                        color: Colours.whiteColor.withOpacity(0.3),\n                      ),\n                    ),\n                    focusedBorder: OutlineInputBorder(\n                      borderRadius: BorderRadius.circular(12),\n                      borderSide: const BorderSide(\n                        color: kPrimary,\n                        width: 2,\n                      ),\n                    ),\n                  ),\n                  onChanged: (value) {\n                    setState(() {}); // Trigger rebuild to apply search filter\n                  },\n                ),\n                \n                const SizedBox(height: 16),\n                \n                // Filter Chips\n                Row(\n                  children: [\n                    Expanded(\n                      child: SingleChildScrollView(\n                        scrollDirection: Axis.horizontal,\n                        child: Row(\n                          children: [\n                            _buildFilterChip('All Types', 'all', _selectedFilter),\n                            const SizedBox(width: 8),\n                            _buildFilterChip('Earnings', 'earning', _selectedFilter),\n                            const SizedBox(width: 8),\n                            _buildFilterChip('Withdrawals', 'withdrawal', _selectedFilter),\n                            const SizedBox(width: 8),\n                            _buildFilterChip('Commissions', 'commission', _selectedFilter),\n                          ],\n                        ),\n                      ),\n                    ),\n                  ],\n                ),\n                \n                const SizedBox(height: 8),\n                \n                // Period Filter\n                Row(\n                  children: [\n                    Expanded(\n                      child: SingleChildScrollView(\n                        scrollDirection: Axis.horizontal,\n                        child: Row(\n                          children: [\n                            _buildPeriodChip('All Time', 'all'),\n                            const SizedBox(width: 8),\n                            _buildPeriodChip('Today', 'today'),\n                            const SizedBox(width: 8),\n                            _buildPeriodChip('This Week', 'week'),\n                            const SizedBox(width: 8),\n                            _buildPeriodChip('This Month', 'month'),\n                            const SizedBox(width: 8),\n                            _buildPeriodChip('This Year', 'year'),\n                          ],\n                        ),\n                      ),\n                    ),\n                  ],\n                ),\n              ],\n            ),\n          ),\n          \n          // Transaction List\n          Expanded(\n            child: transactionsAsync.when(\n              data: (transactions) {\n                final filteredTransactions = _filterTransactions(transactions);\n                \n                if (filteredTransactions.isEmpty) {\n                  return Center(\n                    child: Column(\n                      mainAxisAlignment: MainAxisAlignment.center,\n                      children: [\n                        Icon(\n                          Symbols.receipt_long,\n                          size: 64,\n                          color: Colours.whiteColor.withOpacity(0.3),\n                        ),\n                        const SizedBox(height: 16),\n                        Text(\n                          'No transactions found',\n                          style: TextStyle(\n                            color: Colours.whiteColor.withOpacity(0.7),\n                            fontSize: 18,\n                            fontWeight: FontWeight.w500,\n                          ),\n                        ),\n                        const SizedBox(height: 8),\n                        Text(\n                          'Try adjusting your filters or search terms',\n                          style: TextStyle(\n                            color: Colours.whiteColor.withOpacity(0.5),\n                            fontSize: 14,\n                          ),\n                        ),\n                      ],\n                    ),\n                  );\n                }\n                \n                return RefreshIndicator(\n                  onRefresh: () async {\n                    ref.refresh(getUserTransactionsProvider);\n                  },\n                  child: ListView.builder(\n                    padding: const EdgeInsets.symmetric(horizontal: 16),\n                    itemCount: filteredTransactions.length,\n                    itemBuilder: (context, index) {\n                      final transaction = filteredTransactions[index];\n                      return _buildTransactionCard(transaction);\n                    },\n                  ),\n                );\n              },\n              loading: () => const Center(\n                child: CircularProgressIndicator(color: kPrimary),\n              ),\n              error: (error, stack) => Center(\n                child: Column(\n                  mainAxisAlignment: MainAxisAlignment.center,\n                  children: [\n                    Icon(\n                      Symbols.error,\n                      size: 64,\n                      color: Colours.errorColor.withOpacity(0.7),\n                    ),\n                    const SizedBox(height: 16),\n                    Text(\n                      'Error loading transactions',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 18,\n                        fontWeight: FontWeight.w500,\n                      ),\n                    ),\n                    const SizedBox(height: 8),\n                    Text(\n                      error.toString(),\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.5),\n                        fontSize: 14,\n                      ),\n                      textAlign: TextAlign.center,\n                    ),\n                    const SizedBox(height: 16),\n                    ElevatedButton(\n                      onPressed: () {\n                        ref.refresh(getUserTransactionsProvider);\n                      },\n                      style: ElevatedButton.styleFrom(\n                        backgroundColor: kPrimary,\n                      ),\n                      child: const Text('Retry'),\n                    ),\n                  ],\n                ),\n              ),\n            ),\n          ),\n        ],\n      ),\n    );\n  }\n\n  Widget _buildFilterChip(String label, String value, String selectedValue) {\n    final isSelected = selectedValue == value;\n    return FilterChip(\n      label: Text(\n        label,\n        style: TextStyle(\n          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),\n          fontSize: 12,\n        ),\n      ),\n      selected: isSelected,\n      onSelected: (selected) {\n        setState(() {\n          _selectedFilter = value;\n        });\n      },\n      backgroundColor: Colours.cardColor,\n      selectedColor: kPrimary,\n      checkmarkColor: Colors.white,\n      side: BorderSide(\n        color: isSelected ? kPrimary : Colours.whiteColor.withOpacity(0.3),\n      ),\n    );\n  }\n\n  Widget _buildPeriodChip(String label, String value) {\n    final isSelected = _selectedPeriod == value;\n    return FilterChip(\n      label: Text(\n        label,\n        style: TextStyle(\n          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),\n          fontSize: 12,\n        ),\n      ),\n      selected: isSelected,\n      onSelected: (selected) {\n        setState(() {\n          _selectedPeriod = value;\n        });\n      },\n      backgroundColor: Colours.cardColor,\n      selectedColor: kPrimary,\n      checkmarkColor: Colors.white,\n      side: BorderSide(\n        color: isSelected ? kPrimary : Colours.whiteColor.withOpacity(0.3),\n      ),\n    );\n  }\n\n  Widget _buildTransactionCard(TransactionModel transaction) {\n    final isPositive = transaction.type == TransactionType.earning || \n                      transaction.type == TransactionType.commission;\n    final color = isPositive ? Colors.green : Colors.red;\n    final icon = _getTransactionIcon(transaction.type);\n    \n    return Container(\n      margin: const EdgeInsets.only(bottom: 12),\n      padding: const EdgeInsets.all(16),\n      decoration: BoxDecoration(\n        color: Colours.cardColor,\n        borderRadius: BorderRadius.circular(12),\n        border: Border.all(\n          color: Colours.whiteColor.withOpacity(0.1),\n        ),\n      ),\n      child: Row(\n        children: [\n          Container(\n            width: 48,\n            height: 48,\n            decoration: BoxDecoration(\n              color: color.withOpacity(0.2),\n              borderRadius: BorderRadius.circular(12),\n            ),\n            child: Icon(\n              icon,\n              color: color,\n              size: 24,\n            ),\n          ),\n          const SizedBox(width: 16),\n          Expanded(\n            child: Column(\n              crossAxisAlignment: CrossAxisAlignment.start,\n              children: [\n                Text(\n                  transaction.description,\n                  style: const TextStyle(\n                    color: Colours.whiteColor,\n                    fontSize: 16,\n                    fontWeight: FontWeight.w500,\n                  ),\n                ),\n                const SizedBox(height: 4),\n                Row(\n                  children: [\n                    Text(\n                      transaction.type.value.toUpperCase(),\n                      style: TextStyle(\n                        color: color,\n                        fontSize: 12,\n                        fontWeight: FontWeight.w600,\n                      ),\n                    ),\n                    const SizedBox(width: 8),\n                    Text(\n                      '•',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.5),\n                        fontSize: 12,\n                      ),\n                    ),\n                    const SizedBox(width: 8),\n                    Text(\n                      _formatDate(transaction.createdAt),\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 12,\n                      ),\n                    ),\n                  ],\n                ),\n              ],\n            ),\n          ),\n          Column(\n            crossAxisAlignment: CrossAxisAlignment.end,\n            children: [\n              Text(\n                '${isPositive ? '+' : '-'}\\$${transaction.amount.toStringAsFixed(2)}',\n                style: TextStyle(\n                  color: color,\n                  fontSize: 16,\n                  fontWeight: FontWeight.w600,\n                ),\n              ),\n              const SizedBox(height: 4),\n              Text(\n                _formatTime(transaction.createdAt),\n                style: TextStyle(\n                  color: Colours.whiteColor.withOpacity(0.5),\n                  fontSize: 12,\n                ),\n              ),\n            ],\n          ),\n        ],\n      ),\n    );\n  }\n\n  IconData _getTransactionIcon(TransactionType type) {\n    switch (type) {\n      case TransactionType.earning:\n        return Symbols.trending_up;\n      case TransactionType.withdrawal:\n        return Symbols.trending_down;\n      case TransactionType.commission:\n        return Symbols.payments;\n      case TransactionType.refund:\n        return Symbols.undo;\n      default:\n        return Symbols.receipt;\n    }\n  }\n}\n
+import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
+import 'package:fieldforce/features/wallet/model/wallet_models.dart';
+import 'package:fieldforce/theme/app_colours.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+class TransactionHistoryPage extends ConsumerStatefulWidget {
+  const TransactionHistoryPage({super.key});
+
+  @override
+  ConsumerState<TransactionHistoryPage> createState() => _TransactionHistoryPageState();
+}
+
+class _TransactionHistoryPageState extends ConsumerState<TransactionHistoryPage> {
+  String _selectedFilter = 'all';
+  String _selectedPeriod = 'all';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // Simple date formatting function to replace DateFormat
+  String _formatDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}, ${date.year}';
+  }
+
+  String _formatTime(DateTime date) {
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
+    List<TransactionModel> filtered = transactions;
+
+    // Filter by type
+    if (_selectedFilter != 'all') {
+      filtered = filtered.where((transaction) {
+        return transaction.type.value == _selectedFilter;
+      }).toList();
+    }
+
+    // Filter by period
+    if (_selectedPeriod != 'all') {
+      final now = DateTime.now();
+      DateTime startDate;
+      
+      switch (_selectedPeriod) {
+        case 'today':
+          startDate = DateTime(now.year, now.month, now.day);
+          break;
+        case 'week':
+          startDate = now.subtract(const Duration(days: 7));
+          break;
+        case 'month':
+          startDate = DateTime(now.year, now.month, 1);
+          break;
+        case 'year':
+          startDate = DateTime(now.year, 1, 1);
+          break;
+        default:
+          startDate = DateTime(2000); // Very old date for 'all'
+      }
+      
+      filtered = filtered.where((transaction) {
+        return transaction.createdAt.isAfter(startDate);
+      }).toList();
+    }
+
+    // Filter by search query
+    final query = _searchController.text.toLowerCase();
+    if (query.isNotEmpty) {
+      filtered = filtered.where((transaction) {
+        return transaction.description.toLowerCase().contains(query) ||
+               transaction.type.value.toLowerCase().contains(query);
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final transactionsAsync = ref.watch(getUserTransactionsProvider);
+
+    return Scaffold(
+      backgroundColor: Colours.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colours.backgroundColor,
+        elevation: 0,
+        title: const Text(
+          'Transaction History',
+          style: TextStyle(
+            color: Colours.whiteColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Symbols.arrow_back,
+            color: Colours.whiteColor,
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              ref.refresh(getUserTransactionsProvider);
+            },
+            icon: const Icon(
+              Symbols.refresh,
+              color: Colours.whiteColor,
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Search and Filters
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Search Bar
+                TextField(
+                  controller: _searchController,
+                  style: const TextStyle(color: Colours.whiteColor),
+                  decoration: InputDecoration(
+                    hintText: 'Search transactions...',
+                    hintStyle: TextStyle(
+                      color: Colours.whiteColor.withOpacity(0.5),
+                    ),
+                    prefixIcon: const Icon(
+                      Symbols.search,
+                      color: kPrimary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colours.whiteColor.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colours.whiteColor.withOpacity(0.3),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: kPrimary,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {}); // Trigger rebuild to apply search filter
+                  },
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Filter Chips
+                Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildFilterChip('All Types', 'all', _selectedFilter),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Earnings', 'earning', _selectedFilter),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Withdrawals', 'withdrawal', _selectedFilter),
+                            const SizedBox(width: 8),
+                            _buildFilterChip('Commissions', 'commission', _selectedFilter),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Period Filter
+                Row(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildPeriodChip('All Time', 'all'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Today', 'today'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('This Week', 'week'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('This Month', 'month'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('This Year', 'year'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          // Transaction List
+          Expanded(
+            child: transactionsAsync.when(
+              data: (transactions) {
+                final filteredTransactions = _filterTransactions(transactions);
+                
+                if (filteredTransactions.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Symbols.receipt_long,
+                          size: 64,
+                          color: Colours.whiteColor.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No transactions found',
+                          style: TextStyle(
+                            color: Colours.whiteColor.withOpacity(0.7),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try adjusting your filters or search terms',
+                          style: TextStyle(
+                            color: Colours.whiteColor.withOpacity(0.5),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.refresh(getUserTransactionsProvider);
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredTransactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = filteredTransactions[index];
+                      return _buildTransactionCard(transaction);
+                    },
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: kPrimary),
+              ),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Symbols.error,
+                      size: 64,
+                      color: Colours.errorColor.withOpacity(0.7),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading transactions',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      error.toString(),
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.5),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.refresh(getUserTransactionsProvider);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, String selectedValue) {
+    final isSelected = selectedValue == value;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),
+          fontSize: 12,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedFilter = value;
+        });
+      },
+      backgroundColor: Colours.cardColor,
+      selectedColor: kPrimary,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? kPrimary : Colours.whiteColor.withOpacity(0.3),
+      ),
+    );
+  }
+
+  Widget _buildPeriodChip(String label, String value) {
+    final isSelected = _selectedPeriod == value;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),
+          fontSize: 12,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedPeriod = value;
+        });
+      },
+      backgroundColor: Colours.cardColor,
+      selectedColor: kPrimary,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? kPrimary : Colours.whiteColor.withOpacity(0.3),
+      ),
+    );
+  }
+
+  Widget _buildTransactionCard(TransactionModel transaction) {
+    final isPositive = transaction.type == TransactionType.earning || 
+                      transaction.type == TransactionType.commission;
+    final color = isPositive ? Colors.green : Colors.red;
+    final icon = _getTransactionIcon(transaction.type);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colours.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colours.whiteColor.withOpacity(0.1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction.description,
+                  style: const TextStyle(
+                    color: Colours.whiteColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      transaction.type.value.toUpperCase(),
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '•',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _formatDate(transaction.createdAt),
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${isPositive ? '+' : '-'}\$${transaction.amount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _formatTime(transaction.createdAt),
+                style: TextStyle(
+                  color: Colours.whiteColor.withOpacity(0.5),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getTransactionIcon(TransactionType type) {
+    switch (type) {
+      case TransactionType.earning:
+        return Symbols.trending_up;
+      case TransactionType.withdrawal:
+        return Symbols.trending_down;
+      case TransactionType.commission:
+        return Symbols.payments;
+      case TransactionType.refund:
+        return Symbols.undo;
+      default:
+        return Symbols.receipt;
+    }
+  }
+}
