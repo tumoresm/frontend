@@ -2,6 +2,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/wallet/model/wallet_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -36,6 +37,7 @@ class TransactionAPI implements ITransactionAPI {
   @override
   FutureEither<model.Document> createTransaction(TransactionModel transaction) async {
     if (_db == null) {
+      Loggers.database.warning('Transaction API not available during migration');
       return left(Failure('Transaction API not available during migration', StackTrace.current));
     }
     try {
@@ -61,6 +63,7 @@ class TransactionAPI implements ITransactionAPI {
   @override
   Future<List<TransactionModel>> getTransactionsByUserId(String userId) async {
     if (_db == null) {
+      Loggers.database.warning('Transaction API not available - returning empty list');
       return [];
     }
     try {

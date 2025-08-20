@@ -38,7 +38,7 @@ class BankAccountAPI implements IBankAccountAPI {
           StackTrace.current));
     }
     try {
-      final document = await _db.createDocument(
+      final document = await _db!.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.bankAccountsCollection,
         documentId: ID.unique(),
