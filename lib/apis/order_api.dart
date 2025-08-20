@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:fieldforce/constants/host_constants.dart';
+import 'package:fieldforce/constants/backend_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:fieldforce/core/core.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
@@ -24,7 +24,7 @@ abstract class IOrderAPI {
 }
 
 class OrderAPI implements IOrderAPI {
-  final String _baseUrl = HostConstants.baseURL;
+  String get _baseUrl => BackendConstants.apiBaseUrl;
 
   Future<String?> _getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();

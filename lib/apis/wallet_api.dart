@@ -1,6 +1,6 @@
 
 import 'dart:convert';
-import 'package:fieldforce/constants/host_constants.dart';
+import 'package:fieldforce/constants/backend_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:fieldforce/core/core.dart';
 import 'package:fieldforce/features/wallet/model/wallet_models.dart';
@@ -38,7 +38,7 @@ abstract class IWalletAPI {
 }
 
 class WalletAPI implements IWalletAPI {
-  final String _baseUrl = HostConstants.baseURL;
+  String get _baseUrl => BackendConstants.apiBaseUrl;
 
   Future<String?> _getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
