@@ -1,1 +1,605 @@
-import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';\nimport 'package:fieldforce/features/wallet/model/wallet_models.dart';\nimport 'package:fieldforce/theme/app_colours.dart';\nimport 'package:flutter/material.dart';\nimport 'package:flutter_riverpod/flutter_riverpod.dart';\nimport 'package:material_symbols_icons/symbols.dart';\n\nclass WithdrawalRequestsPage extends ConsumerStatefulWidget {\n  const WithdrawalRequestsPage({super.key});\n\n  @override\n  ConsumerState<WithdrawalRequestsPage> createState() => _WithdrawalRequestsPageState();\n}\n\nclass _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage> {\n  String _selectedStatus = 'all';\n\n  // Simple date formatting function to replace DateFormat\n  String _formatDate(DateTime date) {\n    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',\n                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n    return '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}, ${date.year}';\n  }\n\n  List<WithdrawalRequestModel> _filterRequests(List<WithdrawalRequestModel> requests) {\n    if (_selectedStatus == 'all') {\n      return requests;\n    }\n    \n    return requests.where((request) {\n      return request.status.value == _selectedStatus;\n    }).toList();\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    final withdrawalRequestsAsync = ref.watch(getUserWithdrawalRequestsProvider);\n\n    return Scaffold(\n      backgroundColor: Colours.backgroundColor,\n      appBar: AppBar(\n        backgroundColor: Colours.backgroundColor,\n        elevation: 0,\n        title: const Text(\n          'Withdrawal Requests',\n          style: TextStyle(\n            color: Colours.whiteColor,\n            fontSize: 20,\n            fontWeight: FontWeight.w600,\n          ),\n        ),\n        leading: IconButton(\n          onPressed: () => Navigator.pop(context),\n          icon: const Icon(\n            Symbols.arrow_back,\n            color: Colours.whiteColor,\n          ),\n        ),\n        actions: [\n          IconButton(\n            onPressed: () {\n              ref.refresh(getUserWithdrawalRequestsProvider);\n            },\n            icon: const Icon(\n              Symbols.refresh,\n              color: Colours.whiteColor,\n            ),\n          ),\n        ],\n      ),\n      body: Column(\n        children: [\n          // Status Filter\n          Container(\n            padding: const EdgeInsets.all(16),\n            child: SingleChildScrollView(\n              scrollDirection: Axis.horizontal,\n              child: Row(\n                children: [\n                  _buildStatusChip('All', 'all'),\n                  const SizedBox(width: 8),\n                  _buildStatusChip('Pending', 'pending'),\n                  const SizedBox(width: 8),\n                  _buildStatusChip('Processing', 'processing'),\n                  const SizedBox(width: 8),\n                  _buildStatusChip('Completed', 'completed'),\n                  const SizedBox(width: 8),\n                  _buildStatusChip('Cancelled', 'cancelled'),\n                  const SizedBox(width: 8),\n                  _buildStatusChip('Failed', 'failed'),\n                ],\n              ),\n            ),\n          ),\n          \n          // Withdrawal Requests List\n          Expanded(\n            child: withdrawalRequestsAsync.when(\n              data: (requests) {\n                final filteredRequests = _filterRequests(requests);\n                \n                if (filteredRequests.isEmpty) {\n                  return Center(\n                    child: Column(\n                      mainAxisAlignment: MainAxisAlignment.center,\n                      children: [\n                        Icon(\n                          Symbols.account_balance_wallet,\n                          size: 64,\n                          color: Colours.whiteColor.withOpacity(0.3),\n                        ),\n                        const SizedBox(height: 16),\n                        Text(\n                          'No withdrawal requests found',\n                          style: TextStyle(\n                            color: Colours.whiteColor.withOpacity(0.7),\n                            fontSize: 18,\n                            fontWeight: FontWeight.w500,\n                          ),\n                        ),\n                        const SizedBox(height: 8),\n                        Text(\n                          _selectedStatus == 'all' \n                              ? 'You haven\\'t made any withdrawal requests yet'\n                              : 'No requests with $_selectedStatus status',\n                          style: TextStyle(\n                            color: Colours.whiteColor.withOpacity(0.5),\n                            fontSize: 14,\n                          ),\n                        ),\n                      ],\n                    ),\n                  );\n                }\n                \n                return RefreshIndicator(\n                  onRefresh: () async {\n                    ref.refresh(getUserWithdrawalRequestsProvider);\n                  },\n                  child: ListView.builder(\n                    padding: const EdgeInsets.symmetric(horizontal: 16),\n                    itemCount: filteredRequests.length,\n                    itemBuilder: (context, index) {\n                      final request = filteredRequests[index];\n                      return _buildWithdrawalRequestCard(request);\n                    },\n                  ),\n                );\n              },\n              loading: () => const Center(\n                child: CircularProgressIndicator(color: kPrimary),\n              ),\n              error: (error, stack) => Center(\n                child: Column(\n                  mainAxisAlignment: MainAxisAlignment.center,\n                  children: [\n                    Icon(\n                      Symbols.error,\n                      size: 64,\n                      color: Colours.errorColor.withOpacity(0.7),\n                    ),\n                    const SizedBox(height: 16),\n                    Text(\n                      'Error loading withdrawal requests',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 18,\n                        fontWeight: FontWeight.w500,\n                      ),\n                    ),\n                    const SizedBox(height: 8),\n                    Text(\n                      error.toString(),\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.5),\n                        fontSize: 14,\n                      ),\n                      textAlign: TextAlign.center,\n                    ),\n                    const SizedBox(height: 16),\n                    ElevatedButton(\n                      onPressed: () {\n                        ref.refresh(getUserWithdrawalRequestsProvider);\n                      },\n                      style: ElevatedButton.styleFrom(\n                        backgroundColor: kPrimary,\n                      ),\n                      child: const Text('Retry'),\n                    ),\n                  ],\n                ),\n              ),\n            ),\n          ),\n        ],\n      ),\n    );\n  }\n\n  Widget _buildStatusChip(String label, String value) {\n    final isSelected = _selectedStatus == value;\n    return FilterChip(\n      label: Text(\n        label,\n        style: TextStyle(\n          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),\n          fontSize: 12,\n        ),\n      ),\n      selected: isSelected,\n      onSelected: (selected) {\n        setState(() {\n          _selectedStatus = value;\n        });\n      },\n      backgroundColor: Colours.cardColor,\n      selectedColor: kPrimary,\n      checkmarkColor: Colors.white,\n      side: BorderSide(\n        color: isSelected ? kPrimary : Colours.whiteColor.withOpacity(0.3),\n      ),\n    );\n  }\n\n  Widget _buildWithdrawalRequestCard(WithdrawalRequestModel request) {\n    final statusColor = _getStatusColor(request.status);\n    final statusIcon = _getStatusIcon(request.status);\n    \n    return Container(\n      margin: const EdgeInsets.only(bottom: 12),\n      padding: const EdgeInsets.all(16),\n      decoration: BoxDecoration(\n        color: Colours.cardColor,\n        borderRadius: BorderRadius.circular(12),\n        border: Border.all(\n          color: statusColor.withOpacity(0.3),\n        ),\n      ),\n      child: Column(\n        crossAxisAlignment: CrossAxisAlignment.start,\n        children: [\n          // Header Row\n          Row(\n            children: [\n              Container(\n                width: 40,\n                height: 40,\n                decoration: BoxDecoration(\n                  color: statusColor.withOpacity(0.2),\n                  borderRadius: BorderRadius.circular(10),\n                ),\n                child: Icon(\n                  statusIcon,\n                  color: statusColor,\n                  size: 20,\n                ),\n              ),\n              const SizedBox(width: 12),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    const Text(\n                      'Withdrawal Request',\n                      style: TextStyle(\n                        color: Colours.whiteColor,\n                        fontSize: 16,\n                        fontWeight: FontWeight.w500,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      'ID: ${request.id.substring(0, 8)}...',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 12,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              Container(\n                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),\n                decoration: BoxDecoration(\n                  color: statusColor.withOpacity(0.2),\n                  borderRadius: BorderRadius.circular(6),\n                ),\n                child: Text(\n                  request.status.value.toUpperCase(),\n                  style: TextStyle(\n                    color: statusColor,\n                    fontSize: 10,\n                    fontWeight: FontWeight.w600,\n                  ),\n                ),\n              ),\n            ],\n          ),\n          \n          const SizedBox(height: 16),\n          \n          // Amount and Details\n          Row(\n            children: [\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      'Amount',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 12,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      '\\$${request.amount.toStringAsFixed(2)}',\n                      style: const TextStyle(\n                        color: Colours.whiteColor,\n                        fontSize: 18,\n                        fontWeight: FontWeight.w600,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      'Processing Fee',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 12,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      '\\$${request.processingFee.toStringAsFixed(2)}',\n                      style: const TextStyle(\n                        color: Colours.whiteColor,\n                        fontSize: 14,\n                        fontWeight: FontWeight.w500,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      'Net Amount',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 12,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      '\\$${request.netAmount.toStringAsFixed(2)}',\n                      style: TextStyle(\n                        color: statusColor,\n                        fontSize: 14,\n                        fontWeight: FontWeight.w600,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n            ],\n          ),\n          \n          const SizedBox(height: 16),\n          \n          // Bank Account Info\n          if (request.bankAccountId.isNotEmpty)\n            Container(\n              padding: const EdgeInsets.all(12),\n              decoration: BoxDecoration(\n                color: Colours.backgroundColor.withOpacity(0.5),\n                borderRadius: BorderRadius.circular(8),\n              ),\n              child: Row(\n                children: [\n                  const Icon(\n                    Symbols.account_balance,\n                    color: kPrimary,\n                    size: 16,\n                  ),\n                  const SizedBox(width: 8),\n                  Text(\n                    'Bank Account: ${request.bankAccountId.substring(0, 8)}...',\n                    style: TextStyle(\n                      color: Colours.whiteColor.withOpacity(0.8),\n                      fontSize: 12,\n                    ),\n                  ),\n                ],\n              ),\n            ),\n          \n          const SizedBox(height: 12),\n          \n          // Dates\n          Row(\n            children: [\n              Expanded(\n                child: Column(\n                  crossAxisAlignment: CrossAxisAlignment.start,\n                  children: [\n                    Text(\n                      'Requested',\n                      style: TextStyle(\n                        color: Colours.whiteColor.withOpacity(0.7),\n                        fontSize: 12,\n                      ),\n                    ),\n                    const SizedBox(height: 2),\n                    Text(\n                      _formatDate(request.requestedAt),\n                      style: const TextStyle(\n                        color: Colours.whiteColor,\n                        fontSize: 12,\n                        fontWeight: FontWeight.w500,\n                      ),\n                    ),\n                  ],\n                ),\n              ),\n              if (request.processedAt != null)\n                Expanded(\n                  child: Column(\n                    crossAxisAlignment: CrossAxisAlignment.start,\n                    children: [\n                      Text(\n                        'Processed',\n                        style: TextStyle(\n                          color: Colours.whiteColor.withOpacity(0.7),\n                          fontSize: 12,\n                        ),\n                      ),\n                      const SizedBox(height: 2),\n                      Text(\n                        _formatDate(request.processedAt!),\n                        style: const TextStyle(\n                          color: Colours.whiteColor,\n                          fontSize: 12,\n                          fontWeight: FontWeight.w500,\n                        ),\n                      ),\n                    ],\n                  ),\n                ),\n            ],\n          ),\n          \n          // Notes\n          if (request.notes != null && request.notes!.isNotEmpty)\n            Column(\n              crossAxisAlignment: CrossAxisAlignment.start,\n              children: [\n                const SizedBox(height: 12),\n                Text(\n                  'Notes',\n                  style: TextStyle(\n                    color: Colours.whiteColor.withOpacity(0.7),\n                    fontSize: 12,\n                  ),\n                ),\n                const SizedBox(height: 4),\n                Text(\n                  request.notes!,\n                  style: const TextStyle(\n                    color: Colours.whiteColor,\n                    fontSize: 12,\n                  ),\n                ),\n              ],\n            ),\n          \n          // Cancel Button (if cancellable)\n          if (request.canBeCancelled)\n            Column(\n              children: [\n                const SizedBox(height: 16),\n                SizedBox(\n                  width: double.infinity,\n                  child: OutlinedButton(\n                    onPressed: () => _showCancelDialog(request),\n                    style: OutlinedButton.styleFrom(\n                      side: const BorderSide(color: Colors.red),\n                      shape: RoundedRectangleBorder(\n                        borderRadius: BorderRadius.circular(8),\n                      ),\n                    ),\n                    child: const Text(\n                      'Cancel Request',\n                      style: TextStyle(\n                        color: Colors.red,\n                        fontSize: 14,\n                      ),\n                    ),\n                  ),\n                ),\n              ],\n            ),\n        ],\n      ),\n    );\n  }\n\n  Color _getStatusColor(WithdrawalStatus status) {\n    switch (status) {\n      case WithdrawalStatus.pending:\n        return Colors.orange;\n      case WithdrawalStatus.processing:\n        return Colors.blue;\n      case WithdrawalStatus.completed:\n        return Colors.green;\n      case WithdrawalStatus.cancelled:\n        return Colors.grey;\n      case WithdrawalStatus.failed:\n        return Colors.red;\n      default:\n        return Colors.grey;\n    }\n  }\n\n  IconData _getStatusIcon(WithdrawalStatus status) {\n    switch (status) {\n      case WithdrawalStatus.pending:\n        return Symbols.schedule;\n      case WithdrawalStatus.processing:\n        return Symbols.sync;\n      case WithdrawalStatus.completed:\n        return Symbols.check_circle;\n      case WithdrawalStatus.cancelled:\n        return Symbols.cancel;\n      case WithdrawalStatus.failed:\n        return Symbols.error;\n      default:\n        return Symbols.help;\n    }\n  }\n\n  void _showCancelDialog(WithdrawalRequestModel request) {\n    showDialog(\n      context: context,\n      builder: (context) => AlertDialog(\n        backgroundColor: Colours.cardColor,\n        title: const Text(\n          'Cancel Withdrawal Request',\n          style: TextStyle(color: Colours.whiteColor),\n        ),\n        content: Text(\n          'Are you sure you want to cancel this withdrawal request for \\$${request.amount.toStringAsFixed(2)}?',\n          style: TextStyle(\n            color: Colours.whiteColor.withOpacity(0.8),\n          ),\n        ),\n        actions: [\n          TextButton(\n            onPressed: () => Navigator.pop(context),\n            child: const Text('Keep Request'),\n          ),\n          ElevatedButton(\n            onPressed: () async {\n              Navigator.pop(context);\n              try {\n                await ref.read(walletControllerProvider.notifier)\n                    .cancelWithdrawalRequest(request.id);\n                \n                if (mounted) {\n                  ScaffoldMessenger.of(context).showSnackBar(\n                    const SnackBar(\n                      content: Text('Withdrawal request cancelled'),\n                      backgroundColor: Colors.green,\n                    ),\n                  );\n                }\n              } catch (e) {\n                if (mounted) {\n                  ScaffoldMessenger.of(context).showSnackBar(\n                    SnackBar(\n                      content: Text('Error cancelling request: $e'),\n                      backgroundColor: Colors.red,\n                    ),\n                  );\n                }\n              }\n            },\n            style: ElevatedButton.styleFrom(\n              backgroundColor: Colors.red,\n            ),\n            child: const Text('Cancel Request'),\n          ),\n        ],\n      ),\n    );\n  }\n}\n
+import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
+import 'package:fieldforce/features/wallet/model/wallet_models.dart';
+import 'package:fieldforce/theme/app_colours.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+class WithdrawalRequestsPage extends ConsumerStatefulWidget {
+  const WithdrawalRequestsPage({super.key});
+
+  @override
+  ConsumerState<WithdrawalRequestsPage> createState() => _WithdrawalRequestsPageState();
+}
+
+class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage> {
+  String _selectedStatus = 'all';
+
+  // Simple date formatting function to replace DateFormat
+  String _formatDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}, ${date.year}';
+  }
+
+  List<WithdrawalRequestModel> _filterRequests(List<WithdrawalRequestModel> requests) {
+    if (_selectedStatus == 'all') {
+      return requests;
+    }
+    
+    return requests.where((request) {
+      return request.status.value == _selectedStatus;
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final withdrawalRequestsAsync = ref.watch(getUserWithdrawalRequestsProvider);
+
+    return Scaffold(
+      backgroundColor: Colours.backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colours.backgroundColor,
+        elevation: 0,
+        title: const Text(
+          'Withdrawal Requests',
+          style: TextStyle(
+            color: Colours.whiteColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Symbols.arrow_back,
+            color: Colours.whiteColor,
+          ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              ref.refresh(getUserWithdrawalRequestsProvider);
+            },
+            icon: const Icon(
+              Symbols.refresh,
+              color: Colours.whiteColor,
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Status Filter
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildStatusChip('All', 'all'),
+                  const SizedBox(width: 8),
+                  _buildStatusChip('Pending', 'pending'),
+                  const SizedBox(width: 8),
+                  _buildStatusChip('Processing', 'processing'),
+                  const SizedBox(width: 8),
+                  _buildStatusChip('Completed', 'completed'),
+                  const SizedBox(width: 8),
+                  _buildStatusChip('Cancelled', 'cancelled'),
+                  const SizedBox(width: 8),
+                  _buildStatusChip('Failed', 'failed'),
+                ],
+              ),
+            ),
+          ),
+          
+          // Withdrawal Requests List
+          Expanded(
+            child: withdrawalRequestsAsync.when(
+              data: (requests) {
+                final filteredRequests = _filterRequests(requests);
+                
+                if (filteredRequests.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Symbols.account_balance_wallet,
+                          size: 64,
+                          color: Colours.whiteColor.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No withdrawal requests found',
+                          style: TextStyle(
+                            color: Colours.whiteColor.withOpacity(0.7),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _selectedStatus == 'all' 
+                              ? 'You haven\'t made any withdrawal requests yet'
+                              : 'No requests with $_selectedStatus status',
+                          style: TextStyle(
+                            color: Colours.whiteColor.withOpacity(0.5),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.refresh(getUserWithdrawalRequestsProvider);
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredRequests.length,
+                    itemBuilder: (context, index) {
+                      final request = filteredRequests[index];
+                      return _buildWithdrawalRequestCard(request);
+                    },
+                  ),
+                );
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: kPrimary),
+              ),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Symbols.error,
+                      size: 64,
+                      color: Colours.errorColor.withOpacity(0.7),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading withdrawal requests',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      error.toString(),
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.5),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.refresh(getUserWithdrawalRequestsProvider);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String label, String value) {
+    final isSelected = _selectedStatus == value;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),
+          fontSize: 12,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedStatus = value;
+        });
+      },
+      backgroundColor: Colours.cardColor,
+      selectedColor: kPrimary,
+      checkmarkColor: Colors.white,
+      side: BorderSide(
+        color: isSelected ? kPrimary : Colours.whiteColor.withOpacity(0.3),
+      ),
+    );
+  }
+
+  Widget _buildWithdrawalRequestCard(WithdrawalRequestModel request) {
+    final statusColor = _getStatusColor(request.status);
+    final statusIcon = _getStatusIcon(request.status);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colours.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  statusIcon,
+                  color: statusColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Withdrawal Request',
+                      style: TextStyle(
+                        color: Colours.whiteColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'ID: ${request.id.substring(0, 8)}...',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  request.status.value.toUpperCase(),
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Amount and Details
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Amount',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '\$${request.amount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colours.whiteColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Processing Fee',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '\${(request.processingFee ?? 0.0).toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: Colours.whiteColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Net Amount',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '\${request.calculatedNetAmount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Bank Account Info
+          if (request.bankAccountId.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colours.backgroundColor.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Symbols.account_balance,
+                    color: kPrimary,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Bank Account: ${request.bankAccountId.substring(0, 8)}...',
+                    style: TextStyle(
+                      color: Colours.whiteColor.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          const SizedBox(height: 12),
+          
+          // Dates
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Requested',
+                      style: TextStyle(
+                        color: Colours.whiteColor.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatDate(request.requestedAt),
+                      style: const TextStyle(
+                        color: Colours.whiteColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (request.processedAt != null)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Processed',
+                        style: TextStyle(
+                          color: Colours.whiteColor.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatDate(request.processedAt!),
+                        style: const TextStyle(
+                          color: Colours.whiteColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          
+          // Notes
+          if (request.notes != null && request.notes!.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                Text(
+                  'Notes',
+                  style: TextStyle(
+                    color: Colours.whiteColor.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  request.notes!,
+                  style: const TextStyle(
+                    color: Colours.whiteColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          
+          // Cancel Button (if cancellable)
+          if (request.canBeCancelled)
+            Column(
+              children: [
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _showCancelDialog(request),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancel Request',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor(WithdrawalStatus status) {
+    switch (status) {
+      case WithdrawalStatus.pending:
+        return Colors.orange;
+      case WithdrawalStatus.processing:
+        return Colors.blue;
+      case WithdrawalStatus.completed:
+        return Colors.green;
+      case WithdrawalStatus.cancelled:
+        return Colors.grey;
+      case WithdrawalStatus.failed:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(WithdrawalStatus status) {
+    switch (status) {
+      case WithdrawalStatus.pending:
+        return Symbols.schedule;
+      case WithdrawalStatus.processing:
+        return Symbols.sync;
+      case WithdrawalStatus.completed:
+        return Symbols.check_circle;
+      case WithdrawalStatus.cancelled:
+        return Symbols.cancel;
+      case WithdrawalStatus.failed:
+        return Symbols.error;
+      default:
+        return Symbols.help;
+    }
+  }
+
+  void _showCancelDialog(WithdrawalRequestModel request) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colours.cardColor,
+        title: const Text(
+          'Cancel Withdrawal Request',
+          style: TextStyle(color: Colours.whiteColor),
+        ),
+        content: Text(
+          'Are you sure you want to cancel this withdrawal request for \$${request.amount.toStringAsFixed(2)}?',
+          style: TextStyle(
+            color: Colours.whiteColor.withOpacity(0.8),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Keep Request'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref.read(walletControllerProvider.notifier)
+                    .cancelWithdrawalRequest(request.id);
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Withdrawal request cancelled'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error cancelling request: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Cancel Request'),
+          ),
+        ],
+      ),
+    );
+  }
+}
