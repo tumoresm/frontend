@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 class FlatButton extends StatelessWidget {
   final String buttonText;
-  final VoidCallback onTap;
-  const FlatButton({super.key, required this.buttonText, required this.onTap});
+  final VoidCallback? onTap;
+  const FlatButton({super.key, required this.buttonText, this.onTap});
 
   @override
   Widget build(BuildContext context) {

@@ -25,9 +25,29 @@ class IndustryModel {
       };
 
   factory IndustryModel.fromMap(Map<String, dynamic> map) {
+    // Handle different ID field formats
+    String id = '';
+    if (map.containsKey('\$id') && map['\$id'] != null) {
+      id = map['\$id'].toString();
+    } else if (map.containsKey('id') && map['id'] != null) {
+      id = map['id'].toString();
+    } else if (map.containsKey('_id') && map['_id'] != null) {
+      id = map['_id'].toString();
+    }
+    
+    // Handle different name field formats
+    String name = '';
+    if (map.containsKey('name') && map['name'] != null) {
+      name = map['name'].toString();
+    } else if (map.containsKey('title') && map['title'] != null) {
+      name = map['title'].toString();
+    } else if (map.containsKey('industry_name') && map['industry_name'] != null) {
+      name = map['industry_name'].toString();
+    }
+    
     return IndustryModel(
-      id: map['\$id'] as String? ?? '',
-      name: map['name'] as String? ?? '',
+      id: id,
+      name: name,
     );
   }
 

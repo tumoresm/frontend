@@ -72,7 +72,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) => const EmailVerificationPage()),
+              builder: (context) => EmailVerificationPage(email: email)),
         );
       }
     }

@@ -30,7 +30,8 @@ class PerformanceProviderObserver extends ProviderObserver {
     StackTrace stackTrace,
     ProviderContainer container,
   ) {
-    Loggers.config.error('Provider failed: ${provider.name}', error: error);
+    final providerName = provider.name ?? provider.runtimeType.toString();
+    Loggers.config.error('Provider failed: $providerName', error: error, stackTrace: stackTrace);
   }
 }
 
@@ -117,4 +118,4 @@ final appAuthStateProvider = FutureProvider<AppAuthState>((ref) async {
     Loggers.config.error('Auth state error: $e');
     return const AppAuthState(status: AuthStatus.unauthenticated);
   }
-});
+}, name: 'appAuthStateProvider');

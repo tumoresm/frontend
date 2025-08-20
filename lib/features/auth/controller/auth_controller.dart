@@ -1,16 +1,16 @@
-import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart' as model;
+// Removed unused Appwrite imports after FastAPI migration
 import 'package:fieldforce/features/auth/controller/auth_repository.dart';
 import 'package:fieldforce/constants/constants.dart';
 import 'package:fieldforce/features/auth/view/pages/email_verification_page.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
 import 'package:fieldforce/features/auth/model/user_model.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
-import 'package:fieldforce/core/providers.dart';
 import 'package:fieldforce/core/utils.dart';
 import 'package:fieldforce/core/logger.dart';
+import 'package:fieldforce/core/session_manager.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,24 +23,38 @@ final authControllerProvider =
   );
 });
 
-/// ✅ FIX: Auto-refresh provider that detects session changes
-final currentUserProvider = FutureProvider.autoDispose((ref) async {
+/// ✅ FIX: Auto-refresh provider that detects session changes using FastAPI session
+final currentUserProvider = FutureProvider.autoDispose(
+  (ref) async {
   try {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final user = await authRepository.currentUser();
-    Loggers.auth.debug('currentUserProvider: ${user?.email ?? 'No user'}');
-    return user;
+    final sessionManager = SessionManager.instance;
+    final isLoggedIn = await sessionManager.isLoggedIn();
+
+    if (!isLoggedIn) {
+      Loggers.auth.debug('No active session found');
+      return null;
+    }
+
+    final userData = await sessionManager.getUserData();
+    if (userData != null) {
+      Loggers.auth
+          .debug('currentUserProvider: ${userData['email'] ?? 'No email'}');
+      return userData;
+    }
+
+    Loggers.auth.debug('No user data found in session');
+    return null;
   } catch (e) {
     Loggers.auth.debug('No current user found: $e');
     return null;
   }
-});
+}, name: 'currentUserProvider');
 
-/// ✅ FIX: Auto-refresh provider that fetches user details directly
+/// ✅ FIX: Auto-refresh provider that fetches user details from FastAPI session
 final currentUserDetailsProvider =
     FutureProvider.autoDispose<UserModel?>((ref) async {
   try {
-    // Get current user from the independent provider
+    // Get current user from the session-based provider
     final currentUser = await ref.watch(currentUserProvider.future);
 
     if (currentUser == null) {
@@ -48,69 +62,76 @@ final currentUserDetailsProvider =
       return null;
     }
 
-    Loggers.auth.debug('Current user ID: ${currentUser.$id}');
+    // Convert session data to UserModel
+    final userData = currentUser;
+    final profile = userData['profile'] as Map<String, dynamic>?;
 
-    // Fetch user details directly using providers (no auth controller dependency)
-    final client = ref.read(appwriteClientProvider);
-    final databases = Databases(client);
+    final userModel = UserModel(
+      id: userData['userId'] ?? '',
+      email: userData['email'] ?? '',
+      fullName: userData['fullName'] ?? '',
+      phoneNumber: profile?['phoneNumber'] ?? '',
+      role: profile?['role'] ?? 'Rep',
+      address: profile?['address'] ?? '',
+      idNumber: profile?['idNumber'],
+      profileImage: profile?['profileImage'],
+      selectedAvatar: profile?['selectedAvatar'],
+      verificationStatus:
+          userData['verificationStatus'] ?? VerificationStatus.unverified,
+      myCompaniesPortfolio: [],
+      createdAt: null,
+      updatedAt: null,
+    );
 
-    try {
-      final document = await databases.getDocument(
-        databaseId: AppwriteConstants.databaseId,
-        collectionId: AppwriteConstants.usersCollection,
-        documentId: currentUser.$id,
-      );
-
-      final data = document.data;
-      if (data.isEmpty) {
-        Loggers.database
-            .warning('Document data is empty for user ${currentUser.$id}');
-        return null;
-      }
-
-      // Add the document ID to the data for UserModel creation
-      final dataWithId = Map<String, dynamic>.from(data);
-      dataWithId['\$id'] = document.$id;
-
-      final userModel = UserModel.fromMap(dataWithId);
-      Loggers.database
-          .info('UserModel created successfully: ${userModel.email}');
-      return userModel;
-    } catch (e) {
-      Loggers.database.error(
-          'Error fetching user document for ${currentUser.$id}',
-          error: e);
-      return null;
-    }
+    Loggers.database.info('UserModel created from session: ${userModel.email}');
+    return userModel;
   } catch (e, stackTrace) {
     Loggers.auth.error('Error in currentUserDetailsProvider',
         error: e, stackTrace: stackTrace);
     return null;
   }
-});
+}, name: 'currentUserDetailsProvider');
 
-/// ✅ FIX: Independent provider that fetches user details by ID
+/// ✅ FIX: Independent provider that fetches user details by ID using FastAPI session
 final userDetailsProvider =
     FutureProvider.family<UserModel?, String>((ref, String uid) async {
   try {
-    final client = ref.read(appwriteClientProvider);
-    final databases = Databases(client);
+    // Get user data from FastAPI session
+    final sessionManager = SessionManager.instance;
+    final userData = await sessionManager.getUserData();
 
-    final document = await databases.getDocument(
-      databaseId: AppwriteConstants.databaseId,
-      collectionId: AppwriteConstants.usersCollection,
-      documentId: uid,
-    );
-
-    final data = document.data;
-    if (data.isEmpty) {
+    if (userData == null) {
+      Loggers.database.warning('No user data found in session');
       return null;
     }
 
-    final dataWithId = Map<String, dynamic>.from(data);
-    dataWithId['\$id'] = document.$id;
+    // Check if the requested UID matches the current session user
+    if (userData['userId'] != uid) {
+      Loggers.database.warning('Requested UID does not match session user');
+      return null;
+    }
 
-    return UserModel.fromMap(dataWithId);
+    // Convert session data to UserModel
+    final profile = userData['profile'] as Map<String, dynamic>?;
+
+    final userModel = UserModel(
+      id: userData['userId'] ?? '',
+      email: userData['email'] ?? '',
+      fullName: userData['fullName'] ?? '',
+      phoneNumber: profile?['phoneNumber'] ?? '',
+      role: profile?['role'] ?? 'Rep',
+      address: profile?['address'] ?? '',
+      idNumber: profile?['idNumber'],
+      profileImage: profile?['profileImage'],
+      selectedAvatar: profile?['selectedAvatar'],
+      verificationStatus:
+          userData['verificationStatus'] ?? VerificationStatus.unverified,
+      myCompaniesPortfolio: [],
+      createdAt: null,
+      updatedAt: null,
+    );
+
+    return userModel;
   } catch (e) {
     Loggers.database.error('Error fetching user details for $uid', error: e);
     return null;
@@ -129,7 +150,7 @@ final isProfileCompleteProvider = FutureProvider.autoDispose<bool>((ref) async {
   return userDetails.address.isNotEmpty &&
       userDetails.idNumber != null &&
       userDetails.idNumber!.isNotEmpty;
-});
+}, name: 'isProfileCompleteProvider');
 
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
@@ -144,90 +165,57 @@ class AuthController extends StateNotifier<bool> {
 
   //state = isLoading
 
-  //_account.get() !=null ? HomePage : SignIn
-  Future<model.User?> getCurrentUser() => _authRepository.currentUser();
+  // Get current user from session instead of Appwrite
+  Future<Map<String, dynamic>?> getCurrentUser() async {
+    return await SessionManager.instance.getUserData();
+  }
 
   Future<UserModel?> getUserData(String uid) async {
     try {
       Loggers.database.debug('Fetching user data for UID: $uid');
 
-      // Create an authenticated client using the current session
-      final client = _ref.read(appwriteClientProvider);
-      final account = _ref.read(appwriteAccountProvider);
+      // Get user data from FastAPI session
+      final sessionManager = SessionManager.instance;
+      final userData = await sessionManager.getUserData();
 
-      // Verify we have an active session
-      try {
-        final currentUser = await account.get();
-        Loggers.database.debug('Current session user: ${currentUser.email}');
-      } catch (sessionError) {
-        Loggers.database.error('No active session for database access',
-            error: sessionError);
+      if (userData == null) {
+        Loggers.database.warning('No user data found in session');
         return null;
       }
 
-      // Use the authenticated client for database access
-      final databases = Databases(client);
+      // Check if the requested UID matches the current session user
+      if (userData['userId'] != uid) {
+        Loggers.database.warning('Requested UID does not match session user');
+        return null;
+      }
 
-      Loggers.database.debug(
-          'Attempting to fetch document from database: ${AppwriteConstants.databaseId}');
-      Loggers.database
-          .debug('Collection: ${AppwriteConstants.usersCollection}');
-      Loggers.database.debug('Document ID: $uid');
+      // Convert session data to UserModel
+      final profile = userData['profile'] as Map<String, dynamic>?;
 
-      final document = await databases.getDocument(
-        databaseId: AppwriteConstants.databaseId,
-        collectionId: AppwriteConstants.usersCollection,
-        documentId: uid,
+      final userModel = UserModel(
+        id: userData['userId'] ?? '',
+        email: userData['email'] ?? '',
+        fullName: userData['fullName'] ?? '',
+        phoneNumber: profile?['phoneNumber'] ?? '',
+        role: profile?['role'] ?? 'Rep',
+        address: profile?['address'] ?? '',
+        idNumber: profile?['idNumber'],
+        profileImage: profile?['profileImage'],
+        selectedAvatar: profile?['selectedAvatar'],
+        verificationStatus:
+            userData['verificationStatus'] ?? VerificationStatus.unverified,
+        myCompaniesPortfolio: [],
+        createdAt: null,
+        updatedAt: null,
       );
 
-      Loggers.database.debug('Document received successfully');
-      Loggers.database.debug('Document ID: ${document.$id}');
       Loggers.database
-          .debug('Document data type: ${document.data.runtimeType}');
-
-      // Safely access document data
-      final data = document.data;
-      if (data.isEmpty) {
-        Loggers.database.warning('Document data is empty for user $uid');
-        return null;
-      }
-
-      Loggers.database.debug('Document data keys: ${data.keys.toList()}');
-      Loggers.database.debug('Document data: $data');
-
-      // Add the document ID to the data for UserModel creation
-      final dataWithId = Map<String, dynamic>.from(data);
-      dataWithId['\$id'] = document.$id;
-
-      final updatedUser = UserModel.fromMap(dataWithId);
-      Loggers.database
-          .info('UserModel created successfully: ${updatedUser.email}');
-      return updatedUser;
+          .info('UserModel created from session: ${userModel.email}');
+      return userModel;
     } catch (e, stackTrace) {
-      // Handle all errors generically to avoid nullable type issues
       Loggers.database
           .error('Error in getUserData', error: e, stackTrace: stackTrace);
-      Loggers.database.debug('Error type: ${e.runtimeType}');
-
-      // Provide more specific error handling
-      if (e.toString().contains('document_not_found') ||
-          e.toString().contains('404')) {
-        Loggers.database.warning('Document not found for user $uid');
-        Loggers.database.info(
-            'This usually means the user document was not created during registration');
-      } else if (e.toString().contains('401') ||
-          e.toString().contains('unauthorized')) {
-        Loggers.database.warning('Unauthorized access to user document');
-        Loggers.database
-            .info('This usually means the user session is invalid or expired');
-      } else if (e.toString().contains('LateInitializationError')) {
-        Loggers.database
-            .warning('This appears to be a LateInitializationError');
-        Loggers.database.warning(
-            'This suggests a late variable in Appwrite Document class is not initialized');
-      }
-
-      return null; // Return null instead of rethrowing to prevent app crash
+      return null;
     }
   }
 
@@ -259,11 +247,11 @@ class AuthController extends StateNotifier<bool> {
       (r) {
         if (context.mounted) {
           showSnackBar(context,
-              'Account created successfully! Please check your email for a verification code.');
+              'Account created successfully! A verification code has been sent to your email.');
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-                builder: (context) => const EmailVerificationPage()),
+                builder: (context) => EmailVerificationPage(email: email)),
           );
         }
         return true; // Return true on success
@@ -271,57 +259,32 @@ class AuthController extends StateNotifier<bool> {
     );
   }
 
-  /// Sends email verification to the current user
+  /// Email verification is now handled by FastAPI backend
+  /// This method is kept for backward compatibility but uses FastAPI
   Future<void> _sendEmailVerification() async {
     try {
-      final account = _ref.read(appwriteAccountProvider);
-
-      Loggers.auth.info('Attempting to send email verification...');
-      Loggers.auth.debug('Appwrite Endpoint: ${AppwriteConstants.endPoint}');
-      Loggers.auth.debug('Project ID: ${AppwriteConstants.projectId}');
-      Loggers.auth
-          .debug('Using SMTP Provider ID: ${AppwriteConstants.smtpProviderId}');
-
-      // Verify user is authenticated before sending verification
-      final currentUser = await account.get();
-      Loggers.auth.info('Sending verification for user: ${currentUser.email}');
-
-      // Check if user is already verified
-      if (currentUser.emailVerification) {
-        Loggers.auth.info('User email is already verified');
-        return;
+      // Get current user email from session
+      final userData = await SessionManager.instance.getUserData();
+      if (userData == null) {
+        throw Exception('No user session found');
       }
 
-      await account.createVerification(
-        url: 'http://192.168.100.5/complete_verification.html',
-      );
+      final email = userData['email'] as String;
+      Loggers.auth.info('Requesting email verification resend for: $email');
 
-      Loggers.auth.info('Email verification sent successfully');
+      // This method should not be called directly anymore
+      // Use resendVerificationCode with proper context instead
+      Loggers.auth.warning(
+          '_sendEmailVerification called - use resendVerificationCode instead');
+      throw Exception('Use resendVerificationCode method instead');
     } catch (e) {
       Loggers.auth.error('Failed to send email verification', error: e);
-      Loggers.auth.debug('Error details: ${e.toString()}');
-
-      // Log specific error information for debugging
-      if (e.toString().contains('smtp_disabled') ||
-          e.toString().contains('general_smtp_disabled')) {
-        Loggers.auth.error('SMTP is disabled in Appwrite configuration');
-        Loggers.auth
-            .error('Please check your Appwrite Console → Settings → SMTP');
-        Loggers.auth.error('Ensure SMTP is enabled and properly configured');
-      } else if (e.toString().contains('invalid_url')) {
-        Loggers.auth.error('Invalid verification URL provided');
-      } else if (e.toString().contains('rate_limit')) {
-        Loggers.auth.error('Rate limit exceeded for email verification');
-      } else if (e.toString().contains('unauthorized')) {
-        Loggers.auth.error('User not authenticated for email verification');
-      }
-
       rethrow;
     }
   }
 
   /// Updates user profile with additional verification information
-  /// Uses Appwrite Function for better security and validation
+  /// Uses FastAPI server for profile updates only
   Future<bool> updateUserProfile({
     required String userId,
     required String address,
@@ -329,7 +292,6 @@ class AuthController extends StateNotifier<bool> {
     required File? profileImage,
     required String role,
     required BuildContext context,
-    bool useFunction = true, // Flag to use FastAPI server or direct DB update
   }) async {
     state = true;
     try {
@@ -348,278 +310,48 @@ class AuthController extends StateNotifier<bool> {
         return false;
       }
 
-      // Validate ID Number format (12 digits)
-      if (!RegExp(r'^\d{12}
-
-  /// Refreshes user data by invalidating providers
-  void refreshUserData() {
-    // ✅ FIX: Remove provider invalidation to avoid circular dependency
-    // Providers will refresh automatically when accessed
-    Loggers.auth
-        .info('refreshUserData called - providers will refresh on next access');
-    Loggers.auth
-        .info('No manual invalidation needed to avoid circular dependency');
-  }
-
-  void signIn({
-    required String email,
-    required String password,
-    required BuildContext context,
-  }) async {
-    state = true;
-    final res = await _authRepository.signIn(
-      email: email,
-      password: password,
-    );
-    state = false;
-    res.fold(
-      (l) {
+      // Validate ID Number format (13 digits)
+      if (!RegExp(r'^\d{13}$').hasMatch(idNumber)) {
         if (context.mounted) {
-          showSnackBar(context, l.message);
-        }
-      },
-      (r) async {
-        // Skip email verification check for now
-        Loggers.auth
-            .info('Sign-in successful, skipping email verification check');
-
-        if (context.mounted) {
-          showSnackBar(context, 'Sign in successful!');
-        }
-
-        Loggers.navigation.info('Sign-in successful, preparing navigation...');
-
-        // Wait a moment for the session to be established
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        // ✅ FIX: Verify user document exists after sign-in
-        try {
-          final userDetails =
-              await _ref.read(currentUserDetailsProvider.future);
-          if (userDetails == null) {
-            Loggers.auth.warning(
-                'User document not found after sign-in, but continuing...');
-            // The provider will handle creating the missing document
-          } else {
-            Loggers.auth.info('User document verified: ${userDetails.email}');
-          }
-        } catch (e) {
-          Loggers.auth.warning('Could not verify user document after sign-in',
-              error: e);
-          // Continue anyway, the provider will handle it
-        }
-
-        // ✅ FIX: Remove provider invalidation to avoid circular dependency
-        // Providers will refresh automatically when the underlying session changes
-        Loggers.navigation.info(
-            'Skipping provider invalidation to avoid circular dependency');
-        Loggers.navigation
-            .info('Providers will refresh automatically on next access');
-
-        // ✅ FIX: Direct navigation to dashboard to bypass main.dart routing issues
-        if (context.mounted) {
-          Loggers.navigation.info('Navigating directly to dashboard...');
-          // Navigate directly to dashboard instead of relying on main.dart routing
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const DashBoardController()),
-            (route) => false,
-          );
-          Loggers.navigation.info('Direct navigation to dashboard completed');
-        } else {
-          Loggers.navigation.warning(
-              'Context not mounted, scheduling navigation for next frame');
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DashBoardController()),
-                (route) => false,
-              );
-              Loggers.navigation
-                  .info('Delayed direct navigation to dashboard completed');
-            }
-          });
-        }
-      },
-    );
-  }
-
-  /// Shows dialog to resend email verification
-  void _showResendVerificationDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Email Verification Required'),
-        content: const Text(
-            'Please verify your email address to continue. Would you like us to resend the verification email?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (context.mounted) {
-                Navigator.pop(context);
-              }
-              try {
-                await _sendEmailVerification();
-                if (context.mounted) {
-                  showSnackBar(context,
-                      'Verification email sent! Please check your inbox.');
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  showSnackBar(context,
-                      'Failed to send verification email. Please try again.');
-                }
-              }
-            },
-            child: const Text('Resend'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void logout(BuildContext context) async {
-    final res = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text(
-            'Your session will be deleted. Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (res == true) {
-      final res = await _authRepository.logout();
-      res.fold(
-        (l) {
-          if (context.mounted) {
-            showSnackBar(context, l.message);
-          }
-        },
-        (r) {
-          if (context.mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              SignInPage.route(),
-              (route) => false,
-            );
-          }
-        },
-      );
-    }
-  }
-
-  Future<void> forgotPassword(
-      {required String email, required BuildContext context}) async {
-    state = true;
-    final res = await _authRepository.forgotPassword(email: email);
-    state = false;
-
-    res.fold(
-      (l) {
-        if (context.mounted) {
-          showSnackBar(context, l.message);
-        }
-      },
-      (r) {
-        if (context.mounted) {
-          showSnackBar(context, 'Password reset link sent to your email.');
-        }
-      },
-    );
-  }
-}
-).hasMatch(idNumber)) {
-        if (context.mounted) {
-          showSnackBar(context, 'ID Number must be a 12-digit number.');
+          showSnackBar(context, 'ID Number must be a 13-digit number.');
         }
         return false;
       }
 
-      bool success = false;
-
-      if (useFunction) {
-        // Try FastAPI server first
-        Loggers.database
-            .info('Attempting profile update via FastAPI server...');
-        try {
-          success = await _updateProfileViaAPI(
-            userId: userId,
-            address: address,
-            idNumber: idNumber,
-            profileImage: profileImage,
-            role: role,
-          );
-
-          if (success) {
-            Loggers.database.info('Profile update via API successful');
-          } else {
-            Loggers.database.warning(
-                'API update returned false, falling back to direct update');
-          }
-        } catch (e) {
-          Loggers.database.warning(
-              'API call failed with exception, falling back to direct update',
-              error: e);
-          success = false;
-        }
-
-        // If API failed, fall back to direct database update
-        if (!success) {
-          Loggers.database.info('Falling back to direct database update...');
-          success = await _updateProfileDirect(
-            userId: userId,
-            address: address,
-            idNumber: idNumber,
-            profileImage: profileImage,
-            role: role,
-          );
-
-          if (success) {
-            Loggers.database
-                .info('Profile update via direct database successful');
-          }
-        }
-      } else {
-        // Direct database update only
-        Loggers.database.info('Using direct database update (API disabled)...');
-        success = await _updateProfileDirect(
-          userId: userId,
-          address: address,
-          idNumber: idNumber,
-          profileImage: profileImage,
-          role: role,
-        );
-      }
+      // Update profile via FastAPI server only
+      Loggers.database.info('Updating profile via FastAPI server...');
+      final success = await _updateProfileViaAPI(
+        userId: userId,
+        address: address,
+        idNumber: idNumber,
+        profileImage: profileImage,
+        role: role,
+      );
 
       if (success) {
         Loggers.database.info('Profile updated successfully for user: $userId');
+        
+        // Update local session data to reflect the changes
+        await SessionManager.instance.updateUserProfile(
+          address: address,
+          idNumber: idNumber,
+          role: role,
+          profileImage: profileImage?.path,
+        );
+        
+        // Force refresh of providers to pick up the updated session data
+        _ref.invalidate(currentUserProvider);
+        _ref.invalidate(currentUserDetailsProvider);
+        _ref.invalidate(isProfileCompleteProvider);
+        
         if (context.mounted) {
           showSnackBar(
               context, 'Profile updated successfully! Awaiting verification.');
         }
 
-        // ✅ FIX: Remove provider invalidation to avoid circular dependency
-        // Providers will refresh automatically when accessed after profile update
+        // Providers have been invalidated and will refresh with updated data
         Loggers.database
-            .info('Profile updated - providers will refresh on next access');
+            .info('Profile updated - providers invalidated and will refresh');
 
         return true;
       } else {
@@ -651,68 +383,83 @@ class AuthController extends StateNotifier<bool> {
       Loggers.database
           .info('Updating profile via FastAPI server for user: $userId');
 
-      final endpoint = ApiConstants.updateProfileEndpoint(userId);
+      final endpoint = ApiConstants.updateProfileEndpoint;
       Loggers.database.debug('FastAPI endpoint: $endpoint');
 
       // Get current user session for authentication
-      final account = _ref.read(appwriteAccountProvider);
-      final currentUser = await account.get();
+      final sessionManager = SessionManager.instance;
+      final accessToken = await sessionManager.getAccessToken();
 
-      // Prepare multipart request
-      final request = http.MultipartRequest('PATCH', Uri.parse(endpoint));
-      request.headers.addAll({
-        ...ApiConstants.defaultHeaders,
-        'Authorization': 'Bearer ${currentUser.$id}',
-      });
+      if (accessToken == null) {
+        Loggers.database.error('No access token found for API request');
+        return false;
+      }
 
-      request.fields['address'] = address.trim();
-      request.fields['idNumber'] = idNumber.trim();
-      request.fields['role'] = role;
-      request.fields['verificationStatus'] = VerificationStatus.pending;
-
+      // Check if we have a profile image to upload
       if (profileImage != null) {
+        // Use multipart for file upload
+        final request = http.MultipartRequest('PATCH', Uri.parse(endpoint));
+        request.headers.addAll({
+          'Authorization': 'Bearer $accessToken',
+          'Accept': 'application/json',
+        });
+
+        request.fields['address'] = address.trim();
+        request.fields['idNumber'] = idNumber.trim();
+        request.fields['role'] = role;
+        request.fields['verificationStatus'] = VerificationStatus.pending;
+
         request.files.add(await http.MultipartFile.fromPath(
           'profileImage',
           profileImage.path,
           filename: profileImage.path.split('/').last,
         ));
-      }
 
-      final response = await request.send().timeout(ApiConstants.requestTimeout);
-      final responseBody = await response.stream.bytesToString();
+        final response =
+            await request.send().timeout(ApiConstants.requestTimeout);
+        final responseBody = await response.stream.bytesToString();
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(responseBody);
-        Loggers.database.info(
-            'Profile updated successfully via API: ${responseData['message'] ?? 'Success'}');
-        return true;
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final responseData = jsonDecode(responseBody);
+          Loggers.database.info(
+              'Profile updated successfully via API: ${responseData['message'] ?? 'Success'}');
+          return true;
+        } else {
+          Loggers.database.error(
+              'API profile update failed: HTTP ${response.statusCode}: $responseBody');
+          return false;
+        }
       } else {
-        String errorMessage = 'Unknown error';
-        try {
-          final errorData = jsonDecode(responseBody);
-          errorMessage =
-              errorData['detail'] ?? errorData['message'] ?? 'Unknown error';
-        } catch (e) {
-          errorMessage = 'HTTP ${response.statusCode}: ${responseBody}';
+        // Use JSON for data-only update
+        final requestBody = {
+          'address': address.trim(),
+          'idNumber': idNumber.trim(),
+          'role': role,
+          'verificationStatus': VerificationStatus.pending,
+        };
+
+        final response = await http
+            .patch(
+              Uri.parse(endpoint),
+              headers: {
+                'Authorization': 'Bearer $accessToken',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: jsonEncode(requestBody),
+            )
+            .timeout(ApiConstants.requestTimeout);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final responseData = jsonDecode(response.body);
+          Loggers.database.info(
+              'Profile updated successfully via API: ${responseData['message'] ?? 'Success'}');
+          return true;
+        } else {
+          Loggers.database.error(
+              'API profile update failed: HTTP ${response.statusCode}: ${response.body}');
+          return false;
         }
-
-        Loggers.database.error('API profile update failed: $errorMessage');
-
-        // Log specific error guidance
-        if (response.statusCode == 404) {
-          Loggers.database.error(
-              'ENDPOINT NOT FOUND: The FastAPI server is missing the /users/profile/update endpoint');
-          Loggers.database.error(
-              'Check SERVER_SIDE_FIX_GUIDE.md for server configuration instructions');
-        } else if (response.statusCode == 405) {
-          Loggers.database.error(
-              'METHOD NOT ALLOWED: The endpoint exists but doesn\'t accept PUT requests');
-        } else if (response.statusCode == 422) {
-          Loggers.database
-              .error('VALIDATION ERROR: The request data format is incorrect');
-        }
-
-        return false;
       }
     } catch (e) {
       Loggers.database.error('Error updating profile via API', error: e);
@@ -720,58 +467,31 @@ class AuthController extends StateNotifier<bool> {
     }
   }
 
-  /// Direct database update method (fallback or when function is not available)
-  Future<bool> _updateProfileDirect({
-    required String userId,
-    required String address,
-    required String idNumber,
-    required File? profileImage,
-    required String role,
-  }) async {
-    try {
-      // Create an authenticated client using the current session
-      final client = _ref.read(appwriteClientProvider);
-      final databases = Databases(client);
-
-      // Prepare data for update, handling empty strings properly
-      final updateData = <String, dynamic>{
-        'address': address.trim(),
-        'idNumber': idNumber.trim(),
-        'role': role,
-        'verificationStatus': VerificationStatus
-            .pending, // Set status to Pending after profile completion
-      };
-
-      // Handle profile image upload to Appwrite Storage
-      String? profileImageId;
-      if (profileImage != null) {
-        try {
-          final storage = Storage(client);
-          final file = await storage.createFile(
-            bucketId: AppwriteConstants.imagesBucketId, // Your images bucket ID
-            fileId: ID.unique(),
-            file: InputFile.fromPath(path: profileImage.path),
-          );
-          profileImageId = file.$id;
-          updateData['profileImage'] = profileImageId; // Store file ID in user document
-        } catch (e) {
-          Loggers.database.error('Failed to upload profile image to Appwrite Storage', error: e);
-          // Continue without profile image if upload fails
-        }
-      }
-
-      // Update the user document with additional information
-      await databases.updateDocument(
-        databaseId: AppwriteConstants.databaseId,
-        collectionId: AppwriteConstants.usersCollection,
-        documentId: userId,
-        data: updateData,
+  /// Navigate to dashboard with proper context checking
+  Future<void> _navigateToDashboard(BuildContext context) async {
+    if (context.mounted) {
+      Loggers.navigation.info('Navigating directly to dashboard...');
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const DashBoardController()),
+        (route) => false,
       );
-
-      return true;
-    } catch (e) {
-      Loggers.database.error('Direct profile update failed', error: e);
-      return false;
+      Loggers.navigation.info('Direct navigation to dashboard completed');
+    } else {
+      Loggers.navigation
+          .warning('Context not mounted, scheduling navigation for next frame');
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const DashBoardController()),
+            (route) => false,
+          );
+          Loggers.navigation
+              .info('Delayed direct navigation to dashboard completed');
+        }
+      });
     }
   }
 
@@ -803,9 +523,13 @@ class AuthController extends StateNotifier<bool> {
         }
       },
       (r) async {
-        // Skip email verification check for now
-        Loggers.auth
-            .info('Sign-in successful, skipping email verification check');
+        Loggers.auth.info('FastAPI sign-in successful');
+
+        // Save session data
+        if (r.data != null) {
+          await SessionManager.instance.saveSession(r.data!);
+          Loggers.auth.info('Session saved successfully');
+        }
 
         if (context.mounted) {
           showSnackBar(context, 'Sign in successful!');
@@ -816,57 +540,21 @@ class AuthController extends StateNotifier<bool> {
         // Wait a moment for the session to be established
         await Future.delayed(const Duration(milliseconds: 300));
 
-        // ✅ FIX: Verify user document exists after sign-in
+        // ✅ FIX: Verify user data is available from session
         try {
-          final userDetails =
-              await _ref.read(currentUserDetailsProvider.future);
-          if (userDetails == null) {
-            Loggers.auth.warning(
-                'User document not found after sign-in, but continuing...');
-            // The provider will handle creating the missing document
+          final userData = await SessionManager.instance.getUserData();
+          if (userData != null) {
+            Loggers.auth.info('User session verified: ${userData['email']}');
           } else {
-            Loggers.auth.info('User document verified: ${userDetails.email}');
+            Loggers.auth.warning('No user data found in session after sign-in');
           }
         } catch (e) {
-          Loggers.auth.warning('Could not verify user document after sign-in',
-              error: e);
-          // Continue anyway, the provider will handle it
+          Loggers.auth
+              .warning('Could not verify user session after sign-in', error: e);
         }
 
-        // ✅ FIX: Remove provider invalidation to avoid circular dependency
-        // Providers will refresh automatically when the underlying session changes
-        Loggers.navigation.info(
-            'Skipping provider invalidation to avoid circular dependency');
-        Loggers.navigation
-            .info('Providers will refresh automatically on next access');
-
-        // ✅ FIX: Direct navigation to dashboard to bypass main.dart routing issues
-        if (context.mounted) {
-          Loggers.navigation.info('Navigating directly to dashboard...');
-          // Navigate directly to dashboard instead of relying on main.dart routing
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const DashBoardController()),
-            (route) => false,
-          );
-          Loggers.navigation.info('Direct navigation to dashboard completed');
-        } else {
-          Loggers.navigation.warning(
-              'Context not mounted, scheduling navigation for next frame');
-          SchedulerBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const DashBoardController()),
-                (route) => false,
-              );
-              Loggers.navigation
-                  .info('Delayed direct navigation to dashboard completed');
-            }
-          });
-        }
+        // ✅ FIX: Navigate to dashboard
+        await _navigateToDashboard(context);
       },
     );
   }
@@ -890,10 +578,21 @@ class AuthController extends StateNotifier<bool> {
                 Navigator.pop(context);
               }
               try {
-                await _sendEmailVerification();
-                if (context.mounted) {
-                  showSnackBar(context,
-                      'Verification email sent! Please check your inbox.');
+                // Get current user email from session
+                final userData = await SessionManager.instance.getUserData();
+                if (userData != null) {
+                  final email = userData['email'] as String;
+                  final success = await resendVerificationCode(
+                    email: email,
+                    context: context,
+                  );
+
+                  if (success && context.mounted) {
+                    showSnackBar(context,
+                        'Verification email sent! Please check your inbox.');
+                  }
+                } else if (context.mounted) {
+                  showSnackBar(context, 'No user session found.');
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -930,23 +629,25 @@ class AuthController extends StateNotifier<bool> {
     );
 
     if (res == true) {
-      final res = await _authRepository.logout();
-      res.fold(
-        (l) {
-          if (context.mounted) {
-            showSnackBar(context, l.message);
-          }
-        },
-        (r) {
-          if (context.mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              SignInPage.route(),
-              (route) => false,
-            );
-          }
-        },
-      );
+      try {
+        // Clear FastAPI session
+        await SessionManager.instance.clearSession();
+        Loggers.auth.info('Session cleared successfully');
+
+        if (context.mounted) {
+          showSnackBar(context, 'Logged out successfully');
+          Navigator.pushAndRemoveUntil(
+            context,
+            SignInPage.route(),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        Loggers.auth.error('Error during logout', error: e);
+        if (context.mounted) {
+          showSnackBar(context, 'Logout failed. Please try again.');
+        }
+      }
     }
   }
 
@@ -966,6 +667,71 @@ class AuthController extends StateNotifier<bool> {
         if (context.mounted) {
           showSnackBar(context, 'Password reset link sent to your email.');
         }
+      },
+    );
+  }
+
+  /// Verify email with 8-digit code
+  Future<bool> verifyEmail({
+    required String email,
+    required String code,
+    required BuildContext context,
+  }) async {
+    state = true;
+    final res = await _authRepository.verifyEmail(
+      email: email,
+      code: code,
+    );
+    state = false;
+
+    return res.fold(
+      (l) {
+        if (context.mounted) {
+          showSnackBar(context, l.message);
+        }
+        return false;
+      },
+      (r) {
+        if (context.mounted) {
+          showSnackBar(context, r.message);
+
+          // Navigate to sign in page after successful verification
+          if (r.success && r.data?.requiresLogin == true) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SignInPage()),
+              (route) => false,
+            );
+          }
+        }
+        return r.success;
+      },
+    );
+  }
+
+  /// Resend verification code
+  Future<bool> resendVerificationCode({
+    required String email,
+    required BuildContext context,
+  }) async {
+    state = true;
+    final res = await _authRepository.resendVerification(
+      email: email,
+    );
+    state = false;
+
+    return res.fold(
+      (l) {
+        if (context.mounted) {
+          showSnackBar(context, l.message);
+        }
+        return false;
+      },
+      (r) {
+        if (context.mounted) {
+          showSnackBar(context, r.message);
+        }
+        return r.success;
       },
     );
   }

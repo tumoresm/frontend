@@ -6,8 +6,10 @@ import 'package:fieldforce/features/companies/providers/company_provider.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
 import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/utils/utilities.dart';
+import 'package:fieldforce/utils/custom_field.dart';
+import 'package:fieldforce/utils/flat_button.dart';
 
-import 'package:flutter/material.dart' hide FlatButton;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CreateOrderPage extends ConsumerStatefulWidget {

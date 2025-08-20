@@ -126,15 +126,56 @@ class UserProfilePage extends ConsumerWidget {
                   const SizedBox(height: 5),
                   const Divider(),
                   //Menu ListTiles
-                  const ProfileMenuButton(
-                      title: 'My Portfolio', icon: Symbols.business_center),
-                  const ProfileMenuButton(
-                      title: 'Settings', icon: Symbols.settings),
-                  const ProfileMenuButton(
-                      title: 'Security', icon: Symbols.security),
-                  const ProfileMenuButton(
-                      title: 'Legal Terms', icon: Symbols.contract_edit),
-                  const ProfileMenuButton(title: 'Help', icon: Symbols.help),
+                  ProfileMenuButton(
+                    title: 'My Portfolio',
+                    icon: Symbols.business_center,
+                    onPressed: () {
+                      // TODO: Navigate to My Portfolio page
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('My Portfolio - Coming Soon')),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Settings',
+                    icon: Symbols.settings,
+                    onPressed: () {
+                      // TODO: Navigate to Settings page
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Settings - Coming Soon')),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Security',
+                    icon: Symbols.security,
+                    onPressed: () {
+                      // TODO: Navigate to Security page
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Security - Coming Soon')),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Legal Terms',
+                    icon: Symbols.contract_edit,
+                    onPressed: () {
+                      // TODO: Navigate to Legal Terms page
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Legal Terms - Coming Soon')),
+                      );
+                    },
+                  ),
+                  ProfileMenuButton(
+                    title: 'Help',
+                    icon: Symbols.help,
+                    onPressed: () {
+                      // TODO: Navigate to Help page
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Help & Support - Coming Soon')),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 5),
                   const Divider(),
                   const SizedBox(height: 5),

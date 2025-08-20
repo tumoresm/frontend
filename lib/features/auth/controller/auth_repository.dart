@@ -1,26 +1,22 @@
 import 'package:fieldforce/apis/fastapi_api.dart';
-import 'package:appwrite/models.dart' as model;
-import 'package:fieldforce/apis/auth_api.dart';
 import 'package:fieldforce/core/core.dart';
+import 'package:fieldforce/core/session_manager.dart';
+import 'package:fieldforce/features/auth/model/verification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
 final authRepositoryProvider = Provider((ref) {
   return AuthRepository(
-    authAPI: ref.watch(authAPIProvider),
     fastapiAPI: ref.watch(fastapiAPIProvider),
   );
 });
 
 class AuthRepository {
-  final IAuthAPI _authAPI;
   final IFastAPIApi _fastapiAPI;
 
   AuthRepository({
-    required IAuthAPI authAPI,
     required IFastAPIApi fastapiAPI,
-  })  : _authAPI = authAPI,
-        _fastapiAPI = fastapiAPI;
+  }) : _fastapiAPI = fastapiAPI;
 
   FutureEither<void> signUp({
     required String email,
@@ -34,23 +30,31 @@ class AuthRepository {
       password: password,
       fullName: fullName,
       phoneNumber: phoneNumber,
+      selectedAvatar: selectedAvatar,
     );
   }
 
-  FutureEither<model.Session> signIn({
+  FutureEither<SignInResponse> signIn({
     required String email,
     required String password,
   }) async {
-    return await _authAPI.signIn(
+    return await _fastapiAPI.signIn(
       email: email,
       password: password,
     );
   }
 
-  Future<model.User?> currentUser() => _authAPI.getCurrentUser();
+  Future<Map<String, dynamic>?> currentUser() async {
+    return await SessionManager.instance.getUserData();
+  }
 
   FutureEitherVoid logout() async {
-    return _authAPI.logout();
+    try {
+      await SessionManager.instance.clearSession();
+      return right(null);
+    } catch (e, stackTrace) {
+      return left(Failure(e.toString(), stackTrace));
+    }
   }
 
   FutureEitherVoid forgotPassword({required String email}) async {
@@ -60,5 +64,23 @@ class AuthRepository {
     } catch (e, stackTrace) {
       return left(Failure(e.toString(), stackTrace));
     }
+  }
+
+  FutureEither<EmailVerificationResponse> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    return _fastapiAPI.verifyEmail(
+      email: email,
+      code: code,
+    );
+  }
+
+  FutureEither<ResendVerificationResponse> resendVerification({
+    required String email,
+  }) async {
+    return _fastapiAPI.resendVerification(
+      email: email,
+    );
   }
 }

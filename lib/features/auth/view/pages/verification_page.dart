@@ -19,8 +19,7 @@ class VerificationPage extends ConsumerStatefulWidget {
 
 class _VerificationPageState extends ConsumerState<VerificationPage> {
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _idNumberController =
-      TextEditingController();
+  final TextEditingController _idNumberController = TextEditingController();
 
   String _selectedRole = 'Rep';
   final List<String> _roles = ['Rep', 'Admin', 'Manager'];
@@ -188,9 +187,8 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
                   if (value == null || value.isEmpty) {
                     return 'ID Number is required for verification';
                   }
-                  if (!RegExp(r'^\d{12}
-).hasMatch(value)) {
-                    return 'ID Number must be a 12-digit number';
+                  if (!RegExp(r'^\d{13}$').hasMatch(value)) {
+                    return 'ID Number must be a 13-digit number';
                   }
                   return null;
                 },
