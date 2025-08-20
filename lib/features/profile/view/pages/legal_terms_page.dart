@@ -113,7 +113,8 @@ class LegalTermsPage extends StatelessWidget {
             // Legal Information Card
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -128,9 +129,10 @@ class LegalTermsPage extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Legal Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -474,7 +476,7 @@ Tiered:
 
 3. PAYMENT SCHEDULE
 - Weekly payment cycles
-- Minimum payout threshold: $25
+- Minimum payout threshold: R25
 - Direct deposit to verified bank account
 - Payment history available in app
 
@@ -791,8 +793,8 @@ For urgent compliance issues, contact compliance@fieldforce.com immediately.
                     child: Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ),
                   IconButton(

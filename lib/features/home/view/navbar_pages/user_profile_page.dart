@@ -4,7 +4,7 @@ import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
 import 'package:fieldforce/features/profile/view/pages/portfolio_page.dart';
 import 'package:fieldforce/features/profile/view/pages/settings_page.dart';
 import 'package:fieldforce/features/profile/view/pages/security_page.dart';
-import 'package:fieldforce/features/profile/view/pages/legal_terms_page.dart';
+import 'package:fieldforce/features/profile/view/pages/legal_terms_page_v2.dart';
 import 'package:fieldforce/features/profile/view/pages/help_center_page.dart';
 import 'package:fieldforce/constants/verification_constants.dart';
 import 'package:fieldforce/theme/theme.dart';
@@ -174,7 +174,7 @@ class UserProfilePage extends ConsumerWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const LegalTermsPage(),
+                          builder: (context) => const LegalTermsPageV2(),
                         ),
                       );
                     },
