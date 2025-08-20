@@ -1,10 +1,11 @@
-# Flutter wrapper
+# Flutter wrapper - Essential for Flutter apps
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.**  { *; }
 -keep class io.flutter.util.**  { *; }
 -keep class io.flutter.view.**  { *; }
 -keep class io.flutter.**  { *; }
 -keep class io.flutter.plugins.**  { *; }
+-keep class io.flutter.embedding.** { *; }
 
 # Suppress deprecation warnings for third-party packages
 -dontwarn dev.fluttercommunity.plus.device_info.**
@@ -36,3 +37,13 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# Keep Dart VM service classes
+-keep class io.flutter.view.FlutterMain { *; }
+-keep class io.flutter.view.FlutterView { *; }
+
+# Keep application class
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
