@@ -19,6 +19,7 @@
 # Suppress warnings about deprecated APIs
 -dontwarn android.os.Build$VERSION_CODES
 -dontwarn android.os.Build
+-dontwarn android.os.Build$SERIAL
 
 # Keep all native methods
 -keepclasseswithmembernames class * {
