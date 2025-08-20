@@ -16,7 +16,8 @@ class LegalDocumentRepository {
     try {
       // Try to get from cache first
       final cachedDocuments = await _getCachedDocuments();
-      if (cachedDocuments.isNotEmpty && !_isCacheExpired()) {
+      final isCacheExpired = await _isCacheExpired();
+      if (cachedDocuments.isNotEmpty && !isCacheExpired) {
         Loggers.database.info('Loaded ${cachedDocuments.length} legal documents from cache');
         return cachedDocuments;
       }
