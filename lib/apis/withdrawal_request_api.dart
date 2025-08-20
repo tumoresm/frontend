@@ -2,6 +2,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/wallet/model/wallet_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -30,10 +31,11 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
   @override
   FutureEither<model.Document> createWithdrawalRequest(WithdrawalRequestModel request) async {
     if (_db == null) {
+      Loggers.database.warning('Withdrawal request API not available during migration');
       return left(Failure('Withdrawal request API not available during migration', StackTrace.current));
     }
     try {
-      final document = await _db!.createDocument(
+      final document = await _db.createDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: ID.unique(),
@@ -58,7 +60,7 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
       return left(Failure('Withdrawal request API not available during migration', StackTrace.current));
     }
     try {
-      final document = await _db!.updateDocument(
+      final document = await _db.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: request.id,
@@ -80,10 +82,11 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
   @override
   Future<List<WithdrawalRequestModel>> getWithdrawalRequestsByUserId(String userId) async {
     if (_db == null) {
+      Loggers.database.warning('Withdrawal request API not available - returning empty list');
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         queries: [
@@ -110,7 +113,7 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
       return [];
     }
     try {
-      final documents = await _db!.listDocuments(
+      final documents = await _db.listDocuments(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         queries: [
@@ -137,7 +140,7 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
       return left(Failure('Withdrawal request API not available during migration', StackTrace.current));
     }
     try {
-      final currentDoc = await _db!.getDocument(
+      final currentDoc = await _db.getDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: requestId,
@@ -157,7 +160,7 @@ class WithdrawalRequestAPI implements IWithdrawalRequestAPI {
         notes: 'Cancelled by user',
       );
       
-      final document = await _db!.updateDocument(
+      final document = await _db.updateDocument(
         databaseId: AppwriteConstants.databaseId,
         collectionId: AppwriteConstants.withdrawalRequestsCollection,
         documentId: requestId,
