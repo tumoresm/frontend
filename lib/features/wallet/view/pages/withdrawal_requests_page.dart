@@ -9,24 +9,39 @@ class WithdrawalRequestsPage extends ConsumerStatefulWidget {
   const WithdrawalRequestsPage({super.key});
 
   @override
-  ConsumerState<WithdrawalRequestsPage> createState() => _WithdrawalRequestsPageState();
+  ConsumerState<WithdrawalRequestsPage> createState() =>
+      _WithdrawalRequestsPageState();
 }
 
-class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage> {
+class _WithdrawalRequestsPageState
+    extends ConsumerState<WithdrawalRequestsPage> {
   String _selectedStatus = 'all';
 
   // Simple date formatting function to replace DateFormat
   String _formatDate(DateTime date) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${months[date.month - 1]} ${date.day.toString().padLeft(2, '0')}, ${date.year}';
   }
 
-  List<WithdrawalRequestModel> _filterRequests(List<WithdrawalRequestModel> requests) {
+  List<WithdrawalRequestModel> _filterRequests(
+      List<WithdrawalRequestModel> requests) {
     if (_selectedStatus == 'all') {
       return requests;
     }
-    
+
     return requests.where((request) {
       return request.status.value == _selectedStatus;
     }).toList();
@@ -34,7 +49,8 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
 
   @override
   Widget build(BuildContext context) {
-    final withdrawalRequestsAsync = ref.watch(getUserWithdrawalRequestsProvider);
+    final withdrawalRequestsAsync =
+        ref.watch(getUserWithdrawalRequestsProvider);
 
     return Scaffold(
       backgroundColor: Colours.backgroundColor,
@@ -92,13 +108,13 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
               ),
             ),
           ),
-          
+
           // Withdrawal Requests List
           Expanded(
             child: withdrawalRequestsAsync.when(
               data: (requests) {
                 final filteredRequests = _filterRequests(requests);
-                
+
                 if (filteredRequests.isEmpty) {
                   return Center(
                     child: Column(
@@ -120,7 +136,7 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _selectedStatus == 'all' 
+                          _selectedStatus == 'all'
                               ? 'You haven\'t made any withdrawal requests yet'
                               : 'No requests with $_selectedStatus status',
                           style: TextStyle(
@@ -132,7 +148,7 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                     ),
                   );
                 }
-                
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     ref.refresh(getUserWithdrawalRequestsProvider);
@@ -203,7 +219,8 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
       label: Text(
         label,
         style: TextStyle(
-          color: isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),
+          color:
+              isSelected ? Colors.white : Colours.whiteColor.withOpacity(0.7),
           fontSize: 12,
         ),
       ),
@@ -225,7 +242,7 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
   Widget _buildWithdrawalRequestCard(WithdrawalRequestModel request) {
     final statusColor = _getStatusColor(request.status);
     final statusIcon = _getStatusIcon(request.status);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -296,9 +313,9 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Amount and Details
           Row(
             children: [
@@ -337,9 +354,9 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
+                    const Text(
                       '\${(request.processingFee ?? 0.0).toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colours.whiteColor,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -373,9 +390,9 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Bank Account Info
           if (request.bankAccountId.isNotEmpty)
             Container(
@@ -402,9 +419,9 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                 ],
               ),
             ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Dates
           Row(
             children: [
@@ -457,7 +474,7 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                 ),
             ],
           ),
-          
+
           // Notes
           if (request.notes != null && request.notes!.isNotEmpty)
             Column(
@@ -481,7 +498,7 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                 ),
               ],
             ),
-          
+
           // Cancel Button (if cancellable)
           if (request.canBeCancelled)
             Column(
@@ -569,13 +586,15 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
           ),
           ElevatedButton(
             onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               try {
-                await ref.read(walletControllerProvider.notifier)
+                await ref
+                    .read(walletControllerProvider.notifier)
                     .cancelWithdrawalRequest(request.id);
-                
+
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Withdrawal request cancelled'),
                       backgroundColor: Colors.green,
@@ -584,7 +603,7 @@ class _WithdrawalRequestsPageState extends ConsumerState<WithdrawalRequestsPage>
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text('Error cancelling request: $e'),
                       backgroundColor: Colors.red,
