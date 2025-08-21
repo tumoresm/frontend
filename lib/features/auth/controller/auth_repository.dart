@@ -1,6 +1,5 @@
 import 'package:fieldforce/apis/fastapi_api.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/core/session_manager.dart';
 import 'package:fieldforce/features/auth/model/verification_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -50,9 +49,28 @@ class AuthRepository {
 
   FutureEitherVoid logout() async {
     try {
-      await SessionManager.instance.clearSession();
-      return right(null);
+      // Call server-side logout first
+      final result = await _fastapiAPI.logout();
+      
+      return result.fold(
+        (failure) {
+          // Even if server logout fails, clear local session
+          SessionManager.instance.clearSession();
+          return left(failure);
+        },
+        (success) async {
+          // Clear local session after successful server logout
+          await SessionManager.instance.clearSession();
+          return right(null);
+        },
+      );
     } catch (e, stackTrace) {
+      // Ensure local session is cleared even if there's an error
+      try {
+        await SessionManager.instance.clearSession();
+      } catch (_) {
+        // Ignore errors in local cleanup
+      }
       return left(Failure(e.toString(), stackTrace));
     }
   }

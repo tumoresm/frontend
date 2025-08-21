@@ -24,6 +24,8 @@ abstract class IFastAPIApi {
     required String password,
   });
 
+  FutureEither<void> logout();
+
   FutureEither<EmailVerificationResponse> verifyEmail({
     required String email,
     required String code,
@@ -160,6 +162,54 @@ class FastAPIApi implements IFastAPIApi {
         userFriendlyMessage += 'Please check your credentials and try again.';
       }
       return left(Failure(userFriendlyMessage, stackTrace));
+    }
+  }
+
+  @override
+  FutureEither<void> logout() async {
+    try {
+      final sessionManager = SessionManager.instance;
+      final accessToken = await sessionManager.getAccessToken();
+      
+      if (accessToken == null) {
+        Loggers.auth.warning('No access token found for logout');
+        // Still return success since there's no session to invalidate
+        return right(null);
+      }
+
+      final endpoint = ApiConstants.logoutEndpoint;
+      Loggers.auth.info('Calling server logout at: $endpoint');
+      
+      final response = await http.post(
+        Uri.parse(endpoint),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ).timeout(ApiConstants.requestTimeout);
+
+      Loggers.auth.debug('Logout response status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        Loggers.auth.info('Server logout successful');
+        return right(null);
+      } else {
+        final errorData = jsonDecode(response.body);
+        String errorMessage = 'Logout failed on server.';
+        if (errorData['detail'] is String) {
+          errorMessage = errorData['detail'];
+        } else if (errorData['message'] is String) {
+          errorMessage = errorData['message'];
+        }
+        Loggers.auth.warning('Server logout failed: $errorMessage');
+        // Don't return error - we'll still clear local session
+        return right(null);
+      }
+    } catch (e, stackTrace) {
+      Loggers.auth.warning('Server logout error: $e');
+      // Don't return error - we'll still clear local session
+      return right(null);
     }
   }
 
