@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/auth/view/widgets/auth_vwidgets.dart';
 import 'package:fieldforce/theme/theme.dart';
+import 'package:fieldforce/utils/loading_page.dart';
 
 import 'forgot_password_page.dart';
 import 'signup_page.dart';
