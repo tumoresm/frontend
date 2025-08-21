@@ -60,6 +60,7 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
                   idNumber: _idNumberController.text,
                   profileImage: _profileImageFile, // Pass the File object
                   role: _selectedRole,
+                  verificationStatus: 'Pending',
                   context: context,
                 );
 
