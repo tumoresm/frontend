@@ -103,8 +103,7 @@ class IndustryAPI implements IIndustryAPI {
                   return null;
                 }
               })
-              .where((industry) => industry != null)
-              .cast<IndustryModel>()
+              .whereType<IndustryModel>()
               .toList();
           
           Loggers.database.info('Successfully parsed ${industries.length} industries');
