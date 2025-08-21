@@ -574,8 +574,10 @@ class AuthController extends StateNotifier<bool> {
           ),
           TextButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
               if (context.mounted) {
-                Navigator.pop(context);
+                navigator.pop();
               }
               try {
                 // Get current user email from session
@@ -588,16 +590,26 @@ class AuthController extends StateNotifier<bool> {
                   );
 
                   if (success && context.mounted) {
-                    showSnackBar(context,
-                        'Verification email sent! Please check your inbox.');
+                    scaffoldMessenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Verification email sent! Please check your inbox.'),
+                      ),
+                    );
                   }
                 } else if (context.mounted) {
-                  showSnackBar(context, 'No user session found.');
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('No user session found.'),
+                    ),
+                  );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  showSnackBar(context,
-                      'Failed to send verification email. Please try again.');
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to send verification email. Please try again.'),
+                    ),
+                  );
                 }
               }
             },
