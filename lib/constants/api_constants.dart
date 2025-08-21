@@ -19,6 +19,7 @@ class ApiConstants {
   // Auth endpoints
   static String get registerEndpoint => '$baseUrl/auth/register';
   static String get loginEndpoint => '$baseUrl/auth/login';
+  static String get logoutEndpoint => '$baseUrl/auth/logout';
   
   // User profile endpoints
   static String get updateProfileEndpoint => '$baseUrl/users/me';
