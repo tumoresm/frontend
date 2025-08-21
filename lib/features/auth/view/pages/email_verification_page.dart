@@ -7,6 +7,7 @@ import 'package:fieldforce/utils/flat_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class EmailVerificationPage extends ConsumerStatefulWidget {
@@ -88,12 +89,22 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth > 600;
+    final isSmallScreen = screenWidth < 360;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Your Email'),
+        title: Text(
+          'Verify Your Email',
+          style: TextStyle(fontSize: isSmallScreen ? 18.sp : 20.sp),
+        ),
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: Icon(
+            Symbols.arrow_back,
+            size: isSmallScreen ? 20.sp : 24.sp,
+          ),
           onPressed: () {
             Navigator.pushAndRemoveUntil(
               context,
@@ -104,7 +115,10 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Symbols.help),
+            icon: Icon(
+              Symbols.help,
+              size: isSmallScreen ? 20.sp : 24.sp,
+            ),
             onPressed: () {
               showDialog(
                 context: context,
@@ -116,175 +130,204 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header Section
-              const Icon(
-                Symbols.mark_email_unread,
-                size: 80,
-                color: Colours.gradient2,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isTablet ? 500.w : double.infinity,
+              minHeight: screenHeight - kToolbarHeight - MediaQuery.of(context).padding.top,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32.w : (isSmallScreen ? 16.w : 24.w),
+                vertical: isSmallScreen ? 16.h : 24.h,
               ),
-              const SizedBox(height: 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header Section
+                    Icon(
+                      Symbols.mark_email_unread,
+                      size: isSmallScreen ? 60.sp : (isTablet ? 100.sp : 80.sp),
+                      color: Colours.gradient2,
+                    ),
+                    SizedBox(height: isSmallScreen ? 16.h : 24.h),
 
-              const Text(
-                'Check Your Email',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-
-              Text(
-                'We\'ve sent an 8-digit verification code to ${widget.email ?? 'your email address'}. Please enter it below to verify your account.',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-
-              // Email Field (editable in case user needs to correct it)
-              CustomTextField(
-                controller: _emailController,
-                hintText: 'Email Address',
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: const Icon(Symbols.email),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Email is required';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // Verification Code Field
-              CustomTextField(
-                controller: _codeController,
-                hintText: 'Enter 8-digit code',
-                keyboardType: TextInputType.number,
-                prefixIcon: const Icon(Symbols.pin),
-                maxLength: 8,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Verification code is required';
-                  }
-                  if (value.length != 8) {
-                    return 'Code must be exactly 8 digits';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Verify Button
-              FlatButton(
-                onTap: authState ? null : _verifyEmail,
-                buttonText: authState ? 'Verifying...' : 'Verify Email',
-              ),
-              const SizedBox(height: 16),
-
-              // Resend Code Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Didn\'t receive the code? ',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  TextButton(
-                    onPressed: _isResending ? null : _resendCode,
-                    child: Text(
-                      _isResending ? 'Sending...' : 'Resend Code',
-                      style: const TextStyle(
-                        color: Colours.gradient2,
+                    Text(
+                      'Check Your Email',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 24.sp : (isTablet ? 32.sp : 28.sp),
                         fontWeight: FontWeight.bold,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                    SizedBox(height: isSmallScreen ? 8.h : 12.h),
 
-              // Information Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colours.gradient2.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colours.gradient2.withOpacity(0.3),
-                  ),
-                ),
-                child: const Column(
-                  children: [
-                    Row(
+                    Text(
+                      'We\'ve sent an 8-digit verification code to ${widget.email ?? 'your email address'}. Please enter it below to verify your account.',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14.sp : (isTablet ? 18.sp : 16.sp),
+                        color: Colors.grey,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: isSmallScreen ? 24.h : 32.h),
+
+                    // Email Field (editable in case user needs to correct it)
+                    CustomTextField(
+                      controller: _emailController,
+                      hintText: 'Email Address',
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icon(
+                        Symbols.email,
+                        size: isSmallScreen ? 18.sp : 20.sp,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email is required';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: isSmallScreen ? 16.h : 20.h),
+
+                    // Verification Code Field
+                    CustomTextField(
+                      controller: _codeController,
+                      hintText: 'Enter 8-digit code',
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icon(
+                        Symbols.pin,
+                        size: isSmallScreen ? 18.sp : 20.sp,
+                      ),
+                      maxLength: 8,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Verification code is required';
+                        }
+                        if (value.length != 8) {
+                          return 'Code must be exactly 8 digits';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: isSmallScreen ? 20.h : 24.h),
+
+                    // Verify Button
+                    FlatButton(
+                      onTap: authState ? null : _verifyEmail,
+                      buttonText: authState ? 'Verifying...' : 'Verify Email',
+                    ),
+                    SizedBox(height: isSmallScreen ? 12.h : 16.h),
+
+                    // Resend Code Section
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Icon(
-                          Symbols.info,
-                          color: Colours.gradient2,
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
                         Text(
-                          'Important Information',
+                          'Didn\'t receive the code? ',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colours.gradient2,
+                            color: Colors.grey,
+                            fontSize: isSmallScreen ? 14.sp : 16.sp,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _isResending ? null : _resendCode,
+                          child: Text(
+                            _isResending ? 'Sending...' : 'Resend Code',
+                            style: TextStyle(
+                              color: Colours.gradient2,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isSmallScreen ? 14.sp : 16.sp,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      '• Verification codes expire after 15 minutes\n'
-                      '• Each code can only be used once\n'
-                      '• Check your spam/junk folder if you don\'t see the email\n'
-                      '• Make sure the email address is correct\n'
-                      '• You can request a new code if needed\n'
-                      '• It may take a few minutes for the email to arrive',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
+                    SizedBox(height: isSmallScreen ? 20.h : 24.h),
+
+                    // Information Card
+                    Container(
+                      padding: EdgeInsets.all(isSmallScreen ? 12.w : 16.w),
+                      decoration: BoxDecoration(
+                        color: Colours.gradient2.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(
+                          color: Colours.gradient2.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Symbols.info,
+                                color: Colours.gradient2,
+                                size: isSmallScreen ? 18.sp : 20.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Important Information',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colours.gradient2,
+                                  fontSize: isSmallScreen ? 14.sp : 16.sp,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '• Verification codes expire after 15 minutes\n'
+                            '• Each code can only be used once\n'
+                            '• Check your spam/junk folder if you don\'t see the email\n'
+                            '• Make sure the email address is correct\n'
+                            '• You can request a new code if needed\n'
+                            '• It may take a few minutes for the email to arrive',
+                            style: TextStyle(
+                              fontSize: isSmallScreen ? 12.sp : 14.sp,
+                              color: Colors.grey,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    SizedBox(height: isSmallScreen ? 20.h : 24.h),
+
+                    // Back to Sign In
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SignInPage()),
+                          (route) => false,
+                        );
+                      },
+                      child: Text(
+                        'Back to Sign In',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: isSmallScreen ? 14.sp : 16.sp,
+                        ),
+                      ),
+                    ),
+                    // Add bottom padding for small screens
+                    SizedBox(height: isSmallScreen ? 20.h : 0),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Back to Sign In
-              TextButton(
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignInPage()),
-                    (route) => false,
-                  );
-                },
-                child: const Text(
-                  'Back to Sign In',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
