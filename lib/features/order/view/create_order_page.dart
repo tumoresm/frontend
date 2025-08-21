@@ -5,7 +5,6 @@ import 'package:fieldforce/features/companies/model/product_model.dart';
 import 'package:fieldforce/features/companies/providers/company_provider.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
 import 'package:fieldforce/features/order/provider/order_provider.dart';
-import 'package:fieldforce/utils/utilities.dart';
 import 'package:fieldforce/utils/custom_field.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 

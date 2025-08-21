@@ -5,7 +5,6 @@ import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
 import 'package:fieldforce/features/auth/view/pages/verification_page.dart';
 import 'package:fieldforce/main.dart';
 import 'package:fieldforce/theme/app_colours.dart';
-import 'package:fieldforce/utils/utilities.dart';
 import 'package:fieldforce/core/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
