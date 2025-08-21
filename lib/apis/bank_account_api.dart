@@ -2,7 +2,6 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/wallet/model/wallet_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -35,7 +34,8 @@ class BankAccountAPI implements IBankAccountAPI {
   FutureEither<model.Document> createBankAccount(
       BankAccountModel bankAccount) async {
     if (_db == null) {
-      Loggers.database.warning('Bank account API not available during migration');
+      Loggers.database
+          .warning('Bank account API not available during migration');
       return left(Failure('Bank account API not available during migration',
           StackTrace.current));
     }

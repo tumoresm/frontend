@@ -134,7 +134,8 @@ class PortfolioPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildPerformanceOverviewCard(BuildContext context, AsyncValue userWallet, AsyncValue userOrders) {
+  Widget _buildPerformanceOverviewCard(
+      BuildContext context, AsyncValue userWallet, AsyncValue userOrders) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -153,7 +154,7 @@ class PortfolioPage extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(
+                const Icon(
                   Symbols.dashboard,
                   color: Colors.white,
                   size: 28,
@@ -162,9 +163,9 @@ class PortfolioPage extends ConsumerWidget {
                 Text(
                   'Performance Overview',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ],
             ),
@@ -176,7 +177,9 @@ class PortfolioPage extends ConsumerWidget {
                     context,
                     'Total Earnings',
                     userWallet.when(
-                      data: (wallet) => wallet != null ? '\$${wallet.totalEarnings.toStringAsFixed(2)}' : '\$0.00',
+                      data: (wallet) => wallet != null
+                          ? '\$${wallet.totalEarnings.toStringAsFixed(2)}'
+                          : '\$0.00',
                       loading: () => '...',
                       error: (_, __) => '\$0.00',
                     ),
@@ -207,7 +210,10 @@ class PortfolioPage extends ConsumerWidget {
                     userOrders.when(
                       data: (orders) {
                         if (orders.isEmpty) return '0%';
-                        final completed = orders.where((o) => o.orderStatus.toString().contains('delivered')).length;
+                        final completed = orders
+                            .where((o) =>
+                                o.orderStatus.toString().contains('delivered'))
+                            .length;
                         final rate = (completed / orders.length * 100).round();
                         return '$rate%';
                       },
@@ -225,7 +231,8 @@ class PortfolioPage extends ConsumerWidget {
                       data: (orders) {
                         final thisMonth = orders.where((o) {
                           final now = DateTime.now();
-                          return o.createdAt.month == now.month && o.createdAt.year == now.year;
+                          return o.createdAt.month == now.month &&
+                              o.createdAt.year == now.year;
                         }).length;
                         return thisMonth.toString();
                       },
@@ -243,7 +250,8 @@ class PortfolioPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetricItem(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildMetricItem(
+      BuildContext context, String label, String value, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -254,8 +262,8 @@ class PortfolioPage extends ConsumerWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
+                    color: Colors.white70,
+                  ),
             ),
           ],
         ),
@@ -263,9 +271,9 @@ class PortfolioPage extends ConsumerWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
@@ -273,7 +281,7 @@ class PortfolioPage extends ConsumerWidget {
 
   void _showProfessionalBioDialog(BuildContext context) {
     final bioController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -281,7 +289,8 @@ class PortfolioPage extends ConsumerWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Tell companies about your professional background and experience:'),
+            const Text(
+                'Tell companies about your professional background and experience:'),
             const SizedBox(height: 16),
             TextField(
               controller: bioController,
@@ -314,9 +323,15 @@ class PortfolioPage extends ConsumerWidget {
 
   void _showSkillsDialog(BuildContext context) {
     final skills = [
-      'Sales Strategy', 'Customer Relations', 'Product Knowledge',
-      'Negotiation', 'Lead Generation', 'Market Analysis',
-      'Communication', 'Time Management', 'CRM Software',
+      'Sales Strategy',
+      'Customer Relations',
+      'Product Knowledge',
+      'Negotiation',
+      'Lead Generation',
+      'Market Analysis',
+      'Communication',
+      'Time Management',
+      'CRM Software',
     ];
 
     showDialog(
@@ -372,7 +387,8 @@ class PortfolioPage extends ConsumerWidget {
           children: [
             Icon(Symbols.workspace_premium, size: 48, color: Colors.amber),
             SizedBox(height: 16),
-            Text('Add your professional certifications to showcase your expertise to companies.'),
+            Text(
+                'Add your professional certifications to showcase your expertise to companies.'),
             SizedBox(height: 16),
             Text('This feature will be available in a future update.'),
           ],
@@ -387,7 +403,8 @@ class PortfolioPage extends ConsumerWidget {
     );
   }
 
-  void _showSalesPerformanceDialog(BuildContext context, AsyncValue userOrders) {
+  void _showSalesPerformanceDialog(
+      BuildContext context, AsyncValue userOrders) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -395,9 +412,15 @@ class PortfolioPage extends ConsumerWidget {
         content: userOrders.when(
           data: (orders) {
             final totalOrders = orders.length;
-            final completedOrders = orders.where((o) => o.orderStatus.toString().contains('delivered')).length;
-            final pendingOrders = orders.where((o) => o.orderStatus.toString().contains('pending')).length;
-            final rejectedOrders = orders.where((o) => o.orderStatus.toString().contains('rejected')).length;
+            final completedOrders = orders
+                .where((o) => o.orderStatus.toString().contains('delivered'))
+                .length;
+            final pendingOrders = orders
+                .where((o) => o.orderStatus.toString().contains('pending'))
+                .length;
+            final rejectedOrders = orders
+                .where((o) => o.orderStatus.toString().contains('rejected'))
+                .length;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -408,14 +431,16 @@ class PortfolioPage extends ConsumerWidget {
                 _buildPerformanceRow('Rejected', rejectedOrders.toString()),
                 const Divider(),
                 _buildPerformanceRow(
-                  'Success Rate', 
-                  totalOrders > 0 ? '${(completedOrders / totalOrders * 100).round()}%' : '0%'
-                ),
+                    'Success Rate',
+                    totalOrders > 0
+                        ? '${(completedOrders / totalOrders * 100).round()}%'
+                        : '0%'),
               ],
             );
           },
           loading: () => const CircularProgressIndicator(),
-          error: (error, stack) => const Text('Unable to load performance data'),
+          error: (error, stack) =>
+              const Text('Unable to load performance data'),
         ),
         actions: [
           TextButton(
@@ -450,7 +475,8 @@ class PortfolioPage extends ConsumerWidget {
           children: [
             Icon(Symbols.reviews, size: 48, color: Colors.blue),
             SizedBox(height: 16),
-            Text('Customer reviews and testimonials will appear here once you start completing orders.'),
+            Text(
+                'Customer reviews and testimonials will appear here once you start completing orders.'),
             SizedBox(height: 16),
             Text('This feature will be enhanced in future updates.'),
           ],
@@ -467,10 +493,26 @@ class PortfolioPage extends ConsumerWidget {
 
   void _showAchievementsDialog(BuildContext context) {
     final achievements = [
-      {'title': 'First Order', 'description': 'Complete your first order', 'earned': true},
-      {'title': 'Top Performer', 'description': 'Achieve 95% success rate', 'earned': false},
-      {'title': 'Customer Favorite', 'description': 'Receive 10 five-star reviews', 'earned': false},
-      {'title': 'Sales Champion', 'description': 'Complete 100 orders', 'earned': false},
+      {
+        'title': 'First Order',
+        'description': 'Complete your first order',
+        'earned': true
+      },
+      {
+        'title': 'Top Performer',
+        'description': 'Achieve 95% success rate',
+        'earned': false
+      },
+      {
+        'title': 'Customer Favorite',
+        'description': 'Receive 10 five-star reviews',
+        'earned': false
+      },
+      {
+        'title': 'Sales Champion',
+        'description': 'Complete 100 orders',
+        'earned': false
+      },
     ];
 
     showDialog(
@@ -486,11 +528,13 @@ class PortfolioPage extends ConsumerWidget {
               return ListTile(
                 leading: Icon(
                   Symbols.military_tech,
-                  color: achievement['earned'] as bool ? Colors.amber : Colors.grey,
+                  color: achievement['earned'] as bool
+                      ? Colors.amber
+                      : Colors.grey,
                 ),
                 title: Text(achievement['title'] as String),
                 subtitle: Text(achievement['description'] as String),
-                trailing: achievement['earned'] as bool 
+                trailing: achievement['earned'] as bool
                     ? const Icon(Symbols.check_circle, color: Colors.green)
                     : const Icon(Symbols.lock, color: Colors.grey),
               );
@@ -517,9 +561,11 @@ class PortfolioPage extends ConsumerWidget {
           children: [
             Icon(Symbols.handshake, size: 48, color: Colors.green),
             SizedBox(height: 16),
-            Text('Your partner companies and collaboration history will be displayed here.'),
+            Text(
+                'Your partner companies and collaboration history will be displayed here.'),
             SizedBox(height: 16),
-            Text('Add companies to your portfolio to start building partnerships.'),
+            Text(
+                'Add companies to your portfolio to start building partnerships.'),
           ],
         ),
         actions: [
@@ -542,9 +588,11 @@ class PortfolioPage extends ConsumerWidget {
           children: [
             Icon(Symbols.category, size: 48, color: Colors.purple),
             SizedBox(height: 16),
-            Text('Your industry specializations and expertise levels will be shown here.'),
+            Text(
+                'Your industry specializations and expertise levels will be shown here.'),
             SizedBox(height: 16),
-            Text('Complete orders in different industries to build your expertise profile.'),
+            Text(
+                'Complete orders in different industries to build your expertise profile.'),
           ],
         ),
         actions: [
@@ -567,9 +615,11 @@ class PortfolioPage extends ConsumerWidget {
           children: [
             Icon(Symbols.map, size: 48, color: Colors.orange),
             SizedBox(height: 16),
-            Text('Your service areas and territory coverage will be displayed here.'),
+            Text(
+                'Your service areas and territory coverage will be displayed here.'),
             SizedBox(height: 16),
-            Text('This feature will include interactive maps in future updates.'),
+            Text(
+                'This feature will include interactive maps in future updates.'),
           ],
         ),
         actions: [

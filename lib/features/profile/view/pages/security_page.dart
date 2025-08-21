@@ -47,7 +47,7 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
                 ),
                 SettingsTile(
                   title: 'Two-Factor Authentication',
-                  subtitle: _twoFactorEnabled 
+                  subtitle: _twoFactorEnabled
                       ? 'Enabled - Your account is protected'
                       : 'Disabled - Enable for better security',
                   icon: Symbols.verified_user,
@@ -161,10 +161,10 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
 
   Widget _buildSecurityStatusCard(BuildContext context, dynamic user) {
     final securityScore = _calculateSecurityScore();
-    final color = securityScore >= 80 
-        ? Colors.green 
-        : securityScore >= 60 
-            ? Colors.orange 
+    final color = securityScore >= 80
+        ? Colors.green
+        : securityScore >= 60
+            ? Colors.orange
             : Colors.red;
 
     return Card(
@@ -182,8 +182,8 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
                 Text(
                   'Security Score',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
@@ -220,11 +220,11 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
 
   int _calculateSecurityScore() {
     int score = 40; // Base score for having an account
-    
+
     if (_twoFactorEnabled) score += 30;
     if (_biometricEnabled) score += 20;
     if (_sessionAlerts) score += 10;
-    
+
     return score;
   }
 
@@ -297,7 +297,8 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
                 return;
               }
 
-              if (newPasswordController.text != confirmPasswordController.text) {
+              if (newPasswordController.text !=
+                  confirmPasswordController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('New passwords do not match'),
@@ -310,7 +311,8 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
               if (newPasswordController.text.length < 8) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Password must be at least 8 characters long'),
+                    content:
+                        Text('Password must be at least 8 characters long'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -318,12 +320,13 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
               }
 
               Navigator.pop(context);
-              
+
               try {
                 // Note: This would typically call an API to change password
                 // For now, we'll show a success message
-                await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-                
+                await Future.delayed(
+                    const Duration(seconds: 1)); // Simulate API call
+
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -420,7 +423,7 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
               leading: Icon(Symbols.computer),
               title: Text('Web Browser'),
               subtitle: Text('Last active: 2 hours ago'),
-              trailing: TextButton(child: Text('Revoke'), onPressed: null),
+              trailing: TextButton(onPressed: null, child: Text('Revoke')),
             ),
           ],
         ),
@@ -514,7 +517,8 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Account deletion feature coming soon')),
+                const SnackBar(
+                    content: Text('Account deletion feature coming soon')),
               );
             },
             child: const Text('Delete Account'),

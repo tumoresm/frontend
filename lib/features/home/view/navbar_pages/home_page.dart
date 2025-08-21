@@ -316,7 +316,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     // Orders List
                     filteredOrders.isEmpty
                         ? SliverToBoxAdapter(
-                            child: Container(
+                            child: SizedBox(
                               height: 200.h,
                               child: Center(
                                 child: Column(

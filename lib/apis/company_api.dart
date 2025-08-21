@@ -2,7 +2,6 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as appwrite_models;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/core/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -20,7 +19,7 @@ abstract class ICompanyAPI {
 class CompanyAPI implements ICompanyAPI {
   final Databases? _databases;
   CompanyAPI({Databases? databases}) : _databases = databases;
-  
+
   // Stub constructor for graceful degradation
   CompanyAPI.stub() : _databases = null;
 
@@ -28,7 +27,8 @@ class CompanyAPI implements ICompanyAPI {
   Future<Either<Failure, List<appwrite_models.Document>>> getCompanies() async {
     if (_databases == null) {
       Loggers.database.warning('Company API not available during migration');
-      return left(Failure('Company API not available during migration', StackTrace.current));
+      return left(Failure(
+          'Company API not available during migration', StackTrace.current));
     }
     try {
       final documents = await _databases.listDocuments(
@@ -53,7 +53,8 @@ class CompanyAPI implements ICompanyAPI {
       String id) async {
     if (_databases == null) {
       Loggers.database.warning('Company API not available during migration');
-      return left(Failure('Company API not available during migration', StackTrace.current));
+      return left(Failure(
+          'Company API not available during migration', StackTrace.current));
     }
     try {
       final document = await _databases.getDocument(
