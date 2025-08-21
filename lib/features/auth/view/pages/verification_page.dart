@@ -60,6 +60,7 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
                   idNumber: _idNumberController.text,
                   profileImage: _profileImageFile, // Pass the File object
                   role: _selectedRole,
+                  verificationStatus: 'Pending',
                   context: context,
                 );
 
@@ -112,7 +113,8 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
               : CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey.shade200,
-                  child: Icon(Icons.person, size: 50, color: Colors.grey.shade400),
+                  child:
+                      Icon(Icons.person, size: 50, color: Colors.grey.shade400),
                 ),
         ),
         const SizedBox(height: 16.0),

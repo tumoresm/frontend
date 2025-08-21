@@ -30,12 +30,13 @@ class UserAPI implements IUserAPI {
     try {
       // In the FastAPI system, user data is saved during registration
       // This method is kept for backward compatibility but now updates the session
-      Loggers.database.info('Saving user data to session for user: ${userModel.email}');
-      
+      Loggers.database
+          .info('Saving user data to session for user: ${userModel.email}');
+
       // Update session data if user is logged in
       final sessionManager = SessionManager.instance;
       final isLoggedIn = await sessionManager.isLoggedIn();
-      
+
       if (isLoggedIn) {
         // Update session with new user data
         await sessionManager.updateUserProfile(
@@ -46,7 +47,7 @@ class UserAPI implements IUserAPI {
         );
         Loggers.database.info('User data saved to session successfully');
       }
-      
+
       return right(null);
     } catch (e, st) {
       Loggers.database.error('Error saving user data: $e');
@@ -59,25 +60,28 @@ class UserAPI implements IUserAPI {
     try {
       final endpoint = ApiConstants.getUserProfileEndpoint(userId);
       Loggers.database.info('Fetching user profile from: $endpoint');
-      
+
       final sessionManager = SessionManager.instance;
       final headers = await sessionManager.getAuthHeaders();
-      
-      final response = await http.get(
-        Uri.parse(endpoint),
-        headers: headers,
-      ).timeout(ApiConstants.requestTimeout);
+
+      final response = await http
+          .get(
+            Uri.parse(endpoint),
+            headers: headers,
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       Loggers.database.debug('Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        
+
         // Handle both direct user data and wrapped response
         final userData = responseData['data'] ?? responseData;
-        
+
         final userModel = UserModel.fromMap(userData);
-        Loggers.database.info('User profile fetched successfully for: ${userModel.email}');
+        Loggers.database
+            .info('User profile fetched successfully for: ${userModel.email}');
         return right(userModel);
       } else if (response.statusCode == 404) {
         Loggers.database.warning('User not found: $userId');
@@ -96,8 +100,10 @@ class UserAPI implements IUserAPI {
     } catch (e, stackTrace) {
       Loggers.database.error('Error fetching user profile: $e');
       String userFriendlyMessage = 'Failed to fetch user profile. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
@@ -112,10 +118,10 @@ class UserAPI implements IUserAPI {
     try {
       final endpoint = ApiConstants.updateProfileEndpoint;
       Loggers.database.info('Updating user profile at: $endpoint');
-      
+
       final sessionManager = SessionManager.instance;
       final headers = await sessionManager.getAuthHeaders();
-      
+
       final requestBody = {
         'fullName': userModel.fullName,
         'phoneNumber': userModel.phoneNumber,
@@ -125,18 +131,20 @@ class UserAPI implements IUserAPI {
         'selectedAvatar': userModel.selectedAvatar,
         // Note: profileImage should be handled separately via file upload
       };
-      
-      final response = await http.patch(
-        Uri.parse(endpoint),
-        headers: headers,
-        body: jsonEncode(requestBody),
-      ).timeout(ApiConstants.requestTimeout);
+
+      final response = await http
+          .patch(
+            Uri.parse(endpoint),
+            headers: headers,
+            body: jsonEncode(requestBody),
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       Loggers.database.debug('Response status: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        
+
         // Update local session data
         await sessionManager.updateUserProfile(
           address: userModel.address,
@@ -144,7 +152,7 @@ class UserAPI implements IUserAPI {
           role: userModel.role,
           profileImage: userModel.profileImage,
         );
-        
+
         Loggers.database.info('User profile updated successfully');
         return right(userModel);
       } else {
@@ -161,8 +169,10 @@ class UserAPI implements IUserAPI {
     } catch (e, stackTrace) {
       Loggers.database.error('Error updating user profile: $e');
       String userFriendlyMessage = 'Failed to update user profile. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
@@ -177,15 +187,15 @@ class UserAPI implements IUserAPI {
     try {
       final sessionManager = SessionManager.instance;
       final userData = await sessionManager.getUserData();
-      
+
       if (userData == null) {
         Loggers.database.warning('No user data found in session');
         return left(Failure('No user session found', StackTrace.current));
       }
-      
+
       // Convert session data to UserModel
       final profile = userData['profile'] as Map<String, dynamic>?;
-      
+
       final userModel = UserModel(
         id: userData['userId'] ?? '',
         email: userData['email'] ?? '',
@@ -201,8 +211,9 @@ class UserAPI implements IUserAPI {
         createdAt: null,
         updatedAt: null,
       );
-      
-      Loggers.database.info('Current user retrieved from session: ${userModel.email}');
+
+      Loggers.database
+          .info('Current user retrieved from session: ${userModel.email}');
       return right(userModel);
     } catch (e, stackTrace) {
       Loggers.database.error('Error getting current user: $e');
@@ -215,27 +226,31 @@ class UserAPI implements IUserAPI {
     try {
       final endpoint = '${ApiConstants.baseUrl}/users/search';
       Loggers.database.info('Searching users with query: $query');
-      
+
       final sessionManager = SessionManager.instance;
       final headers = await sessionManager.getAuthHeaders();
-      
-      final response = await http.get(
-        Uri.parse('$endpoint?q=${Uri.encodeComponent(query)}'),
-        headers: headers,
-      ).timeout(ApiConstants.requestTimeout);
+
+      final response = await http
+          .get(
+            Uri.parse('$endpoint?q=${Uri.encodeComponent(query)}'),
+            headers: headers,
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       Loggers.database.debug('Search response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final usersData = responseData['data'] ?? responseData;
-        
+
         if (usersData is List) {
           final users = usersData
-              .map((userData) => UserModel.fromMap(userData as Map<String, dynamic>))
+              .map((userData) =>
+                  UserModel.fromMap(userData as Map<String, dynamic>))
               .toList();
-          
-          Loggers.database.info('Found ${users.length} users matching query: $query');
+
+          Loggers.database
+              .info('Found ${users.length} users matching query: $query');
           return right(users);
         } else {
           Loggers.database.error('Invalid response format for user search');
@@ -255,8 +270,10 @@ class UserAPI implements IUserAPI {
     } catch (e, stackTrace) {
       Loggers.database.error('Error searching users: $e');
       String userFriendlyMessage = 'Failed to search users. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
@@ -271,27 +288,30 @@ class UserAPI implements IUserAPI {
     try {
       final endpoint = '${ApiConstants.baseUrl}/users/$userId';
       Loggers.database.info('Deleting user: $userId');
-      
+
       final sessionManager = SessionManager.instance;
       final headers = await sessionManager.getAuthHeaders();
-      
-      final response = await http.delete(
-        Uri.parse(endpoint),
-        headers: headers,
-      ).timeout(ApiConstants.requestTimeout);
+
+      final response = await http
+          .delete(
+            Uri.parse(endpoint),
+            headers: headers,
+          )
+          .timeout(ApiConstants.requestTimeout);
 
       Loggers.database.debug('Delete response status: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
         Loggers.database.info('User deleted successfully: $userId');
-        
+
         // Clear session if deleting current user
         final currentUserData = await sessionManager.getUserData();
         if (currentUserData != null && currentUserData['userId'] == userId) {
           await sessionManager.clearSession();
-          Loggers.database.info('Current user session cleared after account deletion');
+          Loggers.database
+              .info('Current user session cleared after account deletion');
         }
-        
+
         return right(null);
       } else {
         final errorData = jsonDecode(response.body);
@@ -307,8 +327,10 @@ class UserAPI implements IUserAPI {
     } catch (e, stackTrace) {
       Loggers.database.error('Error deleting user: $e');
       String userFriendlyMessage = 'Failed to delete user. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
@@ -323,19 +345,22 @@ class UserAPI implements IUserAPI {
     try {
       final endpoint = '${ApiConstants.baseUrl}/users/check-email';
       Loggers.database.info('Checking email availability: $email');
-      
-      final response = await http.post(
-        Uri.parse(endpoint),
-        headers: ApiConstants.defaultHeaders,
-        body: jsonEncode({'email': email}),
-      ).timeout(ApiConstants.requestTimeout);
 
-      Loggers.database.debug('Email check response status: ${response.statusCode}');
+      final response = await http
+          .post(
+            Uri.parse(endpoint),
+            headers: ApiConstants.defaultHeaders,
+            body: jsonEncode({'email': email}),
+          )
+          .timeout(ApiConstants.requestTimeout);
+
+      Loggers.database
+          .debug('Email check response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final isAvailable = responseData['available'] ?? false;
-        
+
         Loggers.database.info('Email $email availability: $isAvailable');
         return right(isAvailable);
       } else {
@@ -346,14 +371,17 @@ class UserAPI implements IUserAPI {
         } else if (errorData['message'] is String) {
           errorMessage = errorData['message'];
         }
-        Loggers.database.error('Email availability check failed: $errorMessage');
+        Loggers.database
+            .error('Email availability check failed: $errorMessage');
         return left(Failure(errorMessage, StackTrace.current));
       }
     } catch (e, stackTrace) {
       Loggers.database.error('Error checking email availability: $e');
       String userFriendlyMessage = 'Failed to check email availability. ';
-      if (e.toString().contains('SocketException') || e.toString().contains('Connection')) {
-        userFriendlyMessage += 'Please check your internet connection and try again.';
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('Connection')) {
+        userFriendlyMessage +=
+            'Please check your internet connection and try again.';
       } else if (e.toString().contains('TimeoutException')) {
         userFriendlyMessage += 'Request timed out. Please try again.';
       } else {
