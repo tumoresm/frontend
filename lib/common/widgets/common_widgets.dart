@@ -4,5 +4,6 @@ export './avatar_selector.dart';
 export './filter_button.dart';
 export './filterbar.dart';
 export './notifications_dialog.dart';
+export '../../features/notifications/view/widgets/notification_badge.dart';
 export './order_card.dart';
 export './profile_menu.dart';

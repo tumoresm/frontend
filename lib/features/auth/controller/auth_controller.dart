@@ -1,7 +1,6 @@
 // Removed unused Appwrite imports after FastAPI migration
 import 'package:fieldforce/features/auth/controller/auth_repository.dart';
 import 'package:fieldforce/constants/constants.dart';
-import 'package:fieldforce/constants/api_constants.dart';
 import 'package:fieldforce/features/auth/view/pages/email_verification_page.dart';
 import 'package:fieldforce/features/auth/view/pages/signin_page.dart';
 import 'package:fieldforce/features/auth/model/user_model.dart';
@@ -593,7 +592,8 @@ class AuthController extends StateNotifier<bool> {
                   if (success && context.mounted) {
                     scaffoldMessenger.showSnackBar(
                       const SnackBar(
-                        content: Text('Verification email sent! Please check your inbox.'),
+                        content: Text(
+                            'Verification email sent! Please check your inbox.'),
                       ),
                     );
                   }
@@ -608,7 +608,8 @@ class AuthController extends StateNotifier<bool> {
                 if (context.mounted) {
                   scaffoldMessenger.showSnackBar(
                     const SnackBar(
-                      content: Text('Failed to send verification email. Please try again.'),
+                      content: Text(
+                          'Failed to send verification email. Please try again.'),
                     ),
                   );
                 }
@@ -646,16 +647,17 @@ class AuthController extends StateNotifier<bool> {
       try {
         // First, call server-side logout to invalidate server session
         await _logoutFromServer();
-        
+
         // Then clear local session
         await SessionManager.instance.clearSession();
-        
+
         // Invalidate all auth-related providers to force refresh
         _ref.invalidate(currentUserProvider);
         _ref.invalidate(currentUserDetailsProvider);
         _ref.invalidate(isProfileCompleteProvider);
-        
-        Loggers.auth.info('Complete logout successful - server and local session cleared');
+
+        Loggers.auth.info(
+            'Complete logout successful - server and local session cleared');
 
         if (context.mounted) {
           showSnackBar(context, 'Logged out successfully');
@@ -667,14 +669,14 @@ class AuthController extends StateNotifier<bool> {
         }
       } catch (e) {
         Loggers.auth.error('Error during logout', error: e);
-        
+
         // Even if server logout fails, clear local session
         try {
           await SessionManager.instance.clearSession();
           _ref.invalidate(currentUserProvider);
           _ref.invalidate(currentUserDetailsProvider);
           _ref.invalidate(isProfileCompleteProvider);
-          
+
           if (context.mounted) {
             showSnackBar(context, 'Logged out (local session cleared)');
             Navigator.pushAndRemoveUntil(
@@ -684,7 +686,8 @@ class AuthController extends StateNotifier<bool> {
             );
           }
         } catch (localError) {
-          Loggers.auth.error('Failed to clear local session', error: localError);
+          Loggers.auth
+              .error('Failed to clear local session', error: localError);
           if (context.mounted) {
             showSnackBar(context, 'Logout failed. Please try again.');
           }
@@ -700,7 +703,7 @@ class AuthController extends StateNotifier<bool> {
     try {
       final sessionManager = SessionManager.instance;
       final accessToken = await sessionManager.getAccessToken();
-      
+
       if (accessToken == null) {
         Loggers.auth.warning('No access token found for server logout');
         return;
@@ -708,7 +711,7 @@ class AuthController extends StateNotifier<bool> {
 
       final endpoint = ApiConstants.logoutEndpoint;
       Loggers.auth.info('Calling server logout at: $endpoint');
-      
+
       final response = await http.post(
         Uri.parse(endpoint),
         headers: {
@@ -721,7 +724,8 @@ class AuthController extends StateNotifier<bool> {
       if (response.statusCode == 200 || response.statusCode == 204) {
         Loggers.auth.info('Server logout successful');
       } else {
-        Loggers.auth.warning('Server logout returned status: ${response.statusCode}');
+        Loggers.auth
+            .warning('Server logout returned status: ${response.statusCode}');
         // Don't throw error - we'll still clear local session
       }
     } catch (e) {

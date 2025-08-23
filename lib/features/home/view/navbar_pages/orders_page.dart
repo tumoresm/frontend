@@ -45,7 +45,7 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
     final currentUser = ref.watch(currentUserDetailsProvider);
 
     return Scaffold(
-      appBar: CustomAppBar.appBar(const Text('Orders')),
+      appBar: CustomAppBar.appBar(context, const Text('Orders')),
       body: Column(
         children: [
           const SizedBox(height: 20),

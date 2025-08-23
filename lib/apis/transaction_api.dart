@@ -2,7 +2,6 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as model;
 import 'package:fieldforce/constants/appwrite_constants.dart';
 import 'package:fieldforce/core/core.dart';
-import 'package:fieldforce/core/logger.dart';
 import 'package:fieldforce/features/wallet/model/wallet_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
@@ -30,15 +29,18 @@ abstract class ITransactionAPI {
 class TransactionAPI implements ITransactionAPI {
   final Databases? _db;
   TransactionAPI({Databases? db}) : _db = db;
-  
+
   // Stub constructor for graceful degradation
   TransactionAPI.stub() : _db = null;
 
   @override
-  FutureEither<model.Document> createTransaction(TransactionModel transaction) async {
+  FutureEither<model.Document> createTransaction(
+      TransactionModel transaction) async {
     if (_db == null) {
-      Loggers.database.warning('Transaction API not available during migration');
-      return left(Failure('Transaction API not available during migration', StackTrace.current));
+      Loggers.database
+          .warning('Transaction API not available during migration');
+      return left(Failure('Transaction API not available during migration',
+          StackTrace.current));
     }
     try {
       final document = await _db.createDocument(
@@ -63,7 +65,8 @@ class TransactionAPI implements ITransactionAPI {
   @override
   Future<List<TransactionModel>> getTransactionsByUserId(String userId) async {
     if (_db == null) {
-      Loggers.database.warning('Transaction API not available - returning empty list');
+      Loggers.database
+          .warning('Transaction API not available - returning empty list');
       return [];
     }
     try {
@@ -75,21 +78,20 @@ class TransactionAPI implements ITransactionAPI {
           Query.orderDesc('createdAt'),
         ],
       );
-      
-      return documents.documents
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data);
-            data['\$id'] = doc.$id; // Add document ID to data
-            return TransactionModel.fromMap(data);
-          })
-          .toList();
+
+      return documents.documents.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data);
+        data['\$id'] = doc.$id; // Add document ID to data
+        return TransactionModel.fromMap(data);
+      }).toList();
     } catch (e) {
       return [];
     }
   }
 
   @override
-  Future<List<TransactionModel>> getTransactionsByWalletId(String walletId) async {
+  Future<List<TransactionModel>> getTransactionsByWalletId(
+      String walletId) async {
     if (_db == null) {
       return [];
     }
@@ -102,14 +104,12 @@ class TransactionAPI implements ITransactionAPI {
           Query.orderDesc('createdAt'),
         ],
       );
-      
-      return documents.documents
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data);
-            data['\$id'] = doc.$id; // Add document ID to data
-            return TransactionModel.fromMap(data);
-          })
-          .toList();
+
+      return documents.documents.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data);
+        data['\$id'] = doc.$id; // Add document ID to data
+        return TransactionModel.fromMap(data);
+      }).toList();
     } catch (e) {
       return [];
     }
@@ -133,14 +133,12 @@ class TransactionAPI implements ITransactionAPI {
           Query.orderDesc('createdAt'),
         ],
       );
-      
-      return documents.documents
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data);
-            data['\$id'] = doc.$id; // Add document ID to data
-            return TransactionModel.fromMap(data);
-          })
-          .toList();
+
+      return documents.documents.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data);
+        data['\$id'] = doc.$id; // Add document ID to data
+        return TransactionModel.fromMap(data);
+      }).toList();
     } catch (e) {
       return [];
     }
@@ -166,14 +164,12 @@ class TransactionAPI implements ITransactionAPI {
           Query.orderDesc('createdAt'),
         ],
       );
-      
-      return documents.documents
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data);
-            data['\$id'] = doc.$id; // Add document ID to data
-            return TransactionModel.fromMap(data);
-          })
-          .toList();
+
+      return documents.documents.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data);
+        data['\$id'] = doc.$id; // Add document ID to data
+        return TransactionModel.fromMap(data);
+      }).toList();
     } catch (e) {
       return [];
     }

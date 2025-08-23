@@ -1,5 +1,6 @@
 import 'package:fieldforce/features/splash/splash_screen.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
+import 'package:fieldforce/features/notifications/service/local_notification_service.dart';
 import 'package:fieldforce/theme/app_theme.dart';
 import 'package:fieldforce/core/logger.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 // Performance monitoring
 class PerformanceProviderObserver extends ProviderObserver {
@@ -38,6 +40,9 @@ class PerformanceProviderObserver extends ProviderObserver {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize timezone data
+  tz.initializeTimeZones();
+
   // Performance optimizations
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -51,6 +56,20 @@ void main() async {
   } catch (e) {
     Loggers.config.warning('Could not load .env file: $e');
     Loggers.config.info('Using default values for configuration');
+  }
+
+  // Initialize notification service
+  try {
+    await LocalNotificationService().initialize(
+      onNotificationTapped: (payload) {
+        Loggers.config.info('Notification tapped: $payload');
+        // Handle notification tap here
+      },
+    );
+    await LocalNotificationService().createNotificationChannels();
+    Loggers.config.info('Notification service initialized successfully');
+  } catch (e) {
+    Loggers.config.error('Failed to initialize notification service: $e');
   }
 
   runApp(

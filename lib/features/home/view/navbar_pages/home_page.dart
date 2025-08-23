@@ -1,6 +1,7 @@
 import 'package:fieldforce/features/wallet/provider/wallet_provider.dart';
 import 'package:fieldforce/features/home/provider/time_filter_provider.dart';
-import 'package:fieldforce/common/widgets/notifications_dialog.dart';
+import 'package:fieldforce/features/notifications/view/widgets/notification_badge.dart';
+import 'package:fieldforce/features/notifications/view/pages/notification_center_page.dart';
 import 'package:fieldforce/features/home/view/widgets/time_filter_buttons.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/theme/app_colours.dart';
@@ -10,7 +11,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fieldforce/common/widgets/order_card.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
 import 'package:fieldforce/features/home/view/widgets/earningscard.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -119,20 +119,28 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ),
                   ),
-                  // Notification icon
-                  IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        barrierColor: kSecondary,
-                        builder: (context) => const NotificationsDialog(),
-                      );
-                    },
-                    icon: Icon(
-                      Symbols.notifications,
-                      color: kWhite,
-                      size: 24.sp,
+                  // Notification icon with badge
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: NotificationBadge(
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const NotificationCenterPage(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Symbols.notifications,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                     ),
                   ),
                 ],

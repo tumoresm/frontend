@@ -20,7 +20,6 @@ class SignInPage extends ConsumerStatefulWidget {
 }
 
 class _SignInPageState extends ConsumerState<SignInPage> {
-  final appbar = CustomAppBar.appBar(const Text("Sign In"));
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -43,7 +42,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authControllerProvider);
     return Scaffold(
-      appBar: appbar,
+      appBar: CustomAppBar.appBar(context, const Text("Sign In")),
       body: isLoading
           ? const Loader()
           : Padding(

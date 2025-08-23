@@ -6,8 +6,6 @@ import 'package:fieldforce/features/companies/providers/company_provider.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
 import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/utils/utilities.dart';
-import 'package:fieldforce/utils/custom_field.dart';
-import 'package:fieldforce/utils/flat_button.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,21 +57,21 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Select Location'),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'In a real implementation, this would open a map where you can select the customer\'s location.',
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'For demo purposes, we\'ll use a sample location:',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            const Text('Sample Location: Downtown Office'),
-            const Text('Latitude: 40.7128'),
-            const Text('Longitude: -74.0060'),
+            SizedBox(height: 8),
+            Text('Sample Location: Downtown Office'),
+            Text('Latitude: 40.7128'),
+            Text('Longitude: -74.0060'),
           ],
         ),
         actions: [
@@ -206,21 +204,25 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: _isLocationSelected ? Colors.green : Colors.grey,
+                          color:
+                              _isLocationSelected ? Colors.green : Colors.grey,
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: ListTile(
                         leading: Icon(
                           Icons.location_on,
-                          color: _isLocationSelected ? Colors.green : Colors.grey,
+                          color:
+                              _isLocationSelected ? Colors.green : Colors.grey,
                         ),
                         title: Text(
                           _isLocationSelected
                               ? 'Location Selected'
                               : 'Select Customer Location',
                           style: TextStyle(
-                            color: _isLocationSelected ? Colors.green : Colors.grey[600],
+                            color: _isLocationSelected
+                                ? Colors.green
+                                : Colors.grey[600],
                           ),
                         ),
                         subtitle: _isLocationSelected
@@ -232,7 +234,8 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
                             : const Text('Tap to select location on map'),
                         trailing: _isLocationSelected
                             ? IconButton(
-                                icon: const Icon(Icons.clear, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.clear, color: Colors.red),
                                 onPressed: () {
                                   setState(() {
                                     _customerLocation = {};

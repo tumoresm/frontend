@@ -1,33 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:fieldforce/features/notifications/view/pages/notification_center_page.dart';
 
+/// @deprecated Use NotificationCenterPage directly instead of this dialog
 class NotificationsDialog extends StatelessWidget {
   const NotificationsDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Notifications'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: 5, // Placeholder for notifications
-          itemBuilder: (context, index) {
-            return ListTile(
-              title: Text('Notification $index'),
-              subtitle: const Text('This is a placeholder notification.'),
-            );
-          },
+    // Navigate to the full notification center instead of showing a dialog
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const NotificationCenterPage(),
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Close'),
-        ),
-      ],
-    );
+      );
+    });
+
+    // Return empty container as we're navigating away
+    return const SizedBox.shrink();
   }
 }
