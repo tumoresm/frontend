@@ -5,6 +5,7 @@ import 'package:fieldforce/theme/custom_appbar.dart';
 import 'package:fieldforce/features/order/model/order_model.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/order/provider/order_provider.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fieldforce/common/widgets/order_card.dart';
@@ -54,8 +55,12 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
           currentUser.when(
             data: (user) {
               if (user == null) {
+                Loggers.database.warning('OrdersPage: No user found');
                 return const Center(child: Text('User not found.'));
               }
+              
+              // Log the user ID being used for orders
+              Loggers.database.info('OrdersPage: Using user.id as rep_id: ${user.id}');
               final companiesAsyncValue = ref.watch(getCompaniesProvider);
               return companiesAsyncValue.when(
                 data: (companies) {

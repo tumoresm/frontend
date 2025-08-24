@@ -121,13 +121,24 @@ class AppAuthState {
 // Single provider that combines auth and profile state
 final appAuthStateProvider = FutureProvider<AppAuthState>((ref) async {
   try {
+    // First check if user has a valid token
+    final hasValidToken = await ref.watch(hasValidTokenProvider.future);
+    
+    if (!hasValidToken) {
+      Loggers.config.info('No valid token found - user unauthenticated');
+      return const AppAuthState(status: AuthStatus.unauthenticated);
+    }
+    
     final user = await ref.watch(currentUserProvider.future);
 
     if (user == null) {
+      Loggers.config.info('No user data found - user unauthenticated');
       return const AppAuthState(status: AuthStatus.unauthenticated);
     }
 
     final isComplete = await ref.watch(isProfileCompleteProvider.future);
+    
+    Loggers.config.info('User authenticated with valid token, profile complete: $isComplete');
 
     return AppAuthState(
       status: AuthStatus.authenticated,

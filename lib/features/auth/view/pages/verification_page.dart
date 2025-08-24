@@ -2,6 +2,7 @@ import 'package:fieldforce/utils/custom_field.dart';
 import 'package:fieldforce/utils/flat_button.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/home/controller/dashboard_controller.dart';
+import 'package:fieldforce/core/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,6 +26,57 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
   final List<String> _roles = ['Rep', 'Admin', 'Manager'];
   final _formKey = GlobalKey<FormState>();
   File? _profileImageFile;
+  bool _isCheckingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingProfile();
+  }
+
+  /// Check if user has already completed their profile
+  void _checkExistingProfile() async {
+    try {
+      final userDetails = await ref.read(currentUserDetailsProvider.future);
+      
+      if (userDetails != null) {
+        // Pre-fill form with existing data
+        if (userDetails.address.isNotEmpty) {
+          _addressController.text = userDetails.address;
+        }
+        if (userDetails.idNumber != null && userDetails.idNumber!.isNotEmpty) {
+          _idNumberController.text = userDetails.idNumber!;
+        }
+        if (userDetails.role.isNotEmpty) {
+          _selectedRole = userDetails.role;
+        }
+        
+        // Check if profile is already complete
+        final isComplete = await ref.read(isProfileCompleteProvider.future);
+        if (isComplete) {
+          Loggers.auth.info('Profile already complete, navigating to dashboard');
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DashBoardController(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      Loggers.auth.error('Error checking existing profile', error: e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingProfile = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -42,6 +94,40 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
         _profileImageFile = File(image.path);
       });
     }
+  }
+
+  void _skipVerification() {
+    Loggers.auth.info('User chose to skip verification');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Skip Verification'),
+        content: const Text(
+          'You can complete your profile verification later from the settings page. '
+          'Some features may be limited until your profile is verified.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DashBoardController(),
+                ),
+                (route) => false,
+              );
+            },
+            child: const Text('Skip'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _submitVerificationInfo() async {
@@ -132,10 +218,33 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
+    // Show loading while checking existing profile
+    if (_isCheckingProfile) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Checking profile status...'),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Complete Your Profile'),
         actions: [
+          TextButton(
+            onPressed: _skipVerification,
+            child: const Text(
+              'Skip',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
           TextButton(
             onPressed: () {
               ref.read(authControllerProvider.notifier).logout(context);
@@ -228,9 +337,27 @@ class _VerificationPageState extends ConsumerState<VerificationPage> {
                     authState ? 'Submitting...' : 'Submit for Verification',
               ),
               const SizedBox(height: 16.0),
+              OutlinedButton(
+                onPressed: _skipVerification,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  side: const BorderSide(color: Colors.grey),
+                ),
+                child: const Text(
+                  'Skip for Now',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 16.0),
               const Text(
                 'After submitting, please wait for an administrator to verify your account.',
                 style: TextStyle(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8.0),
+              const Text(
+                'You can complete verification later from your profile settings.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
             ],

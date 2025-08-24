@@ -91,24 +91,25 @@ class AppRouter extends ConsumerWidget {
 
     return authState.when(
       data: (state) {
-        Loggers.config.info('Auth state: ${state.status}');
-
+        Loggers.config.info('AppRouter: Auth state received - ${state.status}');
+        Loggers.config.info('AppRouter: Profile complete - ${state.isProfileComplete}');
+        
         switch (state.status) {
           case AuthStatus.authenticated:
             if (state.isProfileComplete) {
               Loggers.config.info(
-                  'User authenticated and profile complete - navigating to dashboard');
+                  'AppRouter: User authenticated and profile complete - navigating to dashboard');
               return const DashBoardController();
             } else {
               Loggers.config.info(
-                  'User authenticated but profile incomplete - navigating to verification');
+                  'AppRouter: User authenticated but profile incomplete - navigating to verification');
               return const VerificationPage();
             }
           case AuthStatus.unauthenticated:
-            Loggers.config.info('User unauthenticated - navigating to sign in');
+            Loggers.config.info('AppRouter: User unauthenticated - navigating to sign in');
             return const SignInPage();
           case AuthStatus.loading:
-            Loggers.config.info('Auth state loading - showing loading page');
+            Loggers.config.info('AppRouter: Auth state loading - showing loading page');
             return const LoadingPage();
         }
       },

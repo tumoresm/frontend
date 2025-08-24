@@ -26,25 +26,32 @@ final authControllerProvider =
 /// ✅ FIX: Auto-refresh provider that detects session changes using FastAPI session
 final currentUserProvider = FutureProvider.autoDispose((ref) async {
   try {
+    Loggers.auth.debug('currentUserProvider: Starting session check');
     final sessionManager = SessionManager.instance;
+    
+    // Debug session state
+    await sessionManager.debugSessionState();
+    
+    // Check if user is logged in
     final isLoggedIn = await sessionManager.isLoggedIn();
+    Loggers.auth.debug('currentUserProvider: isLoggedIn = $isLoggedIn');
 
     if (!isLoggedIn) {
-      Loggers.auth.debug('No active session found');
+      Loggers.auth.debug('currentUserProvider: No active session found');
       return null;
     }
 
+    // Get user data from session
     final userData = await sessionManager.getUserData();
     if (userData != null) {
-      Loggers.auth
-          .debug('currentUserProvider: ${userData['email'] ?? 'No email'}');
+      Loggers.auth.info('currentUserProvider: Session data found for user: ${userData['email'] ?? 'No email'}');
       return userData;
     }
 
-    Loggers.auth.debug('No user data found in session');
+    Loggers.auth.warning('currentUserProvider: User is logged in but no user data found in session');
     return null;
-  } catch (e) {
-    Loggers.auth.debug('No current user found: $e');
+  } catch (e, stackTrace) {
+    Loggers.auth.error('currentUserProvider: Error retrieving current user', error: e, stackTrace: stackTrace);
     return null;
   }
 }, name: 'currentUserProvider');
@@ -138,6 +145,7 @@ final userDetailsProvider =
 });
 
 /// Checks if the current user's profile is complete
+/// Profile is considered complete if user has: address, idNumber, and profileImage
 final isProfileCompleteProvider = FutureProvider.autoDispose<bool>((ref) async {
   final userDetails = await ref.watch(currentUserDetailsProvider.future);
 
@@ -146,10 +154,31 @@ final isProfileCompleteProvider = FutureProvider.autoDispose<bool>((ref) async {
   }
 
   // Check if essential profile fields are filled
-  return userDetails.address.isNotEmpty &&
-      userDetails.idNumber != null &&
-      userDetails.idNumber!.isNotEmpty;
+  final hasAddress = userDetails.address.isNotEmpty;
+  final hasIdNumber = userDetails.idNumber != null && userDetails.idNumber!.isNotEmpty;
+  final hasProfileImage = userDetails.profileImage != null && userDetails.profileImage!.isNotEmpty;
+  
+  Loggers.auth.debug('Profile completion check: address=$hasAddress, idNumber=$hasIdNumber, profileImage=$hasProfileImage');
+  
+  return hasAddress && hasIdNumber && hasProfileImage;
 }, name: 'isProfileCompleteProvider');
+
+/// Checks if the current user has a valid token
+final hasValidTokenProvider = FutureProvider.autoDispose<bool>((ref) async {
+  try {
+    final sessionManager = SessionManager.instance;
+    final accessToken = await sessionManager.getAccessToken();
+    final isLoggedIn = await sessionManager.isLoggedIn();
+    
+    final hasValidToken = accessToken != null && accessToken.isNotEmpty && isLoggedIn;
+    Loggers.auth.debug('Token validation: hasToken=${accessToken != null}, isLoggedIn=$isLoggedIn, valid=$hasValidToken');
+    
+    return hasValidToken;
+  } catch (e) {
+    Loggers.auth.error('Error checking token validity', error: e);
+    return false;
+  }
+}, name: 'hasValidTokenProvider');
 
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
@@ -527,8 +556,27 @@ class AuthController extends StateNotifier<bool> {
 
         // Save session data
         if (r.data != null) {
+          Loggers.auth.info('Saving session data for user: ${r.data!.email}');
           await SessionManager.instance.saveSession(r.data!);
           Loggers.auth.info('Session saved successfully');
+          
+          // Verify session was saved correctly
+          final savedUserData = await SessionManager.instance.getUserData();
+          if (savedUserData != null) {
+            Loggers.auth.info('Session verification successful: ${savedUserData['email']}');
+          } else {
+            Loggers.auth.error('Session verification failed: No user data found after saving');
+            if (context.mounted) {
+              showSnackBar(context, 'Session save failed. Please try signing in again.');
+            }
+            return;
+          }
+        } else {
+          Loggers.auth.error('No session data received from sign-in response');
+          if (context.mounted) {
+            showSnackBar(context, 'Invalid response from server. Please try again.');
+          }
+          return;
         }
 
         if (context.mounted) {
@@ -537,21 +585,17 @@ class AuthController extends StateNotifier<bool> {
 
         Loggers.navigation.info('Sign-in successful, preparing navigation...');
 
-        // Wait a moment for the session to be established
-        await Future.delayed(const Duration(milliseconds: 300));
+        // Wait a moment for the session to be fully established
+        await Future.delayed(const Duration(milliseconds: 500));
 
-        // ✅ FIX: Verify user data is available from session
-        try {
-          final userData = await SessionManager.instance.getUserData();
-          if (userData != null) {
-            Loggers.auth.info('User session verified: ${userData['email']}');
-          } else {
-            Loggers.auth.warning('No user data found in session after sign-in');
-          }
-        } catch (e) {
-          Loggers.auth
-              .warning('Could not verify user session after sign-in', error: e);
-        }
+        // Force refresh of auth providers to pick up the new session
+        _ref.invalidate(currentUserProvider);
+        _ref.invalidate(currentUserDetailsProvider);
+        _ref.invalidate(hasValidTokenProvider);
+        _ref.invalidate(isProfileCompleteProvider);
+        
+        Loggers.auth.info('Auth providers invalidated, waiting for refresh...');
+        await Future.delayed(const Duration(milliseconds: 200));
 
         // ✅ FIX: Navigate to dashboard
         await _navigateToDashboard(context);

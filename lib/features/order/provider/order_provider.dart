@@ -30,12 +30,23 @@ final getOrdersProvider = FutureProvider((ref) async {
 
 final getRepOrdersProvider = FutureProvider.family((ref, String repId) async {
   try {
+    Loggers.database.info('getRepOrdersProvider called with rep_id: $repId');
+    
+    // Validate rep_id
+    if (repId.isEmpty) {
+      Loggers.database.error('Empty rep_id provided to getRepOrdersProvider');
+      return <OrderModel>[];
+    }
+    
     final orderController = ref.watch(orderControllerProvider.notifier);
-    return await orderController.getRepOrders(repId);
-  } catch (e) {
-    // Handle Appwrite authentication errors gracefully
-    Loggers.database.warning('Rep orders API not available (Appwrite auth issue): $e');
-    Loggers.database.info('Returning empty orders list for rep $repId until migration to FastAPI is complete');
+    final orders = await orderController.getRepOrders(repId);
+    
+    Loggers.database.info('getRepOrdersProvider returning ${orders.length} orders for rep_id: $repId');
+    return orders;
+  } catch (e, stackTrace) {
+    // Handle authentication errors gracefully
+    Loggers.database.error('Rep orders API error for rep_id $repId: $e', error: e, stackTrace: stackTrace);
+    Loggers.database.info('Returning empty orders list for rep $repId');
     return <OrderModel>[];
   }
 }, name: 'getRepOrdersProvider');
@@ -63,13 +74,23 @@ class OrderController extends StateNotifier<bool> {
   }
 
   Future<List<OrderModel>> getRepOrders(String repId) async {
+    Loggers.database.info('OrderController.getRepOrders called with rep_id: $repId');
+    
+    if (repId.isEmpty) {
+      Loggers.database.error('OrderController.getRepOrders: Empty rep_id provided');
+      return <OrderModel>[];
+    }
+    
     final result = await _orderAPI.getRepOrders(repId);
     return result.fold(
       (failure) {
-        Loggers.database.error('Failed to get rep orders: ${failure.message}');
+        Loggers.database.error('OrderController.getRepOrders failed for rep_id $repId: ${failure.message}');
         return <OrderModel>[];
       },
-      (orders) => orders,
+      (orders) {
+        Loggers.database.info('OrderController.getRepOrders success: ${orders.length} orders for rep_id $repId');
+        return orders;
+      },
     );
   }
 

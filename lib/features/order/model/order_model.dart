@@ -90,7 +90,8 @@ class OrderModel extends BaseModel {
 
   Map<String, dynamic> toMap() => <String, dynamic>{
         'id': id,
-        'repId': repId,
+        'user_id': repId, // Use user_id for backend compatibility
+        'repId': repId, // Keep repId for backward compatibility
         'companyId': companyId,
         'productId': productId,
         'addons': addons,
@@ -183,7 +184,7 @@ class OrderModel extends BaseModel {
   factory OrderModel.fromMap(Map<String, dynamic> map) {
     return OrderModel(
       id: map['\$id'] ?? map['id'] ?? '',
-      repId: map['repId']?.toString() ?? '',
+      repId: map['repId']?.toString() ?? map['user_id']?.toString() ?? '',
       companyId: map['companyId']?.toString() ?? '',
       productId: map['productId']?.toString() ?? '',
       addons: map['addons']?.toString(),

@@ -80,7 +80,7 @@ class BackendConstants {
 
   // Order endpoints
   static String getOrderEndpoint(String orderId) => '$ordersEndpoint/$orderId';
-  static String getRepOrdersEndpoint(String repId) => '$ordersEndpoint/rep/$repId';
+  static String getRepOrdersEndpoint(String repId) => '$ordersEndpoint/user/$repId'; // Use user endpoint instead of rep
 
   // Wallet endpoints
   static String getUserWalletEndpoint(String userId) => '$walletsEndpoint/$userId';

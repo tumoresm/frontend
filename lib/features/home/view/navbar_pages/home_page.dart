@@ -4,6 +4,7 @@ import 'package:fieldforce/features/notifications/view/widgets/notification_badg
 import 'package:fieldforce/features/notifications/view/pages/notification_center_page.dart';
 import 'package:fieldforce/features/home/view/widgets/time_filter_buttons.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
+import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/theme/app_colours.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,17 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  /// Refresh method for pull-to-refresh functionality
+  Future<void> _refreshHomeData() async {
+    // Invalidate all providers to trigger a refresh
+    ref.invalidate(currentUserDetailsProvider);
+    ref.invalidate(getUserWalletProvider);
+    ref.invalidate(getOrdersProvider);
+    
+    // Wait a bit to ensure the refresh completes
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserDetails = ref.watch(currentUserDetailsProvider);
@@ -177,7 +189,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                     topRight: Radius.circular(24.r),
                   ),
                 ),
-                child: CustomScrollView(
+                child: RefreshIndicator(
+                  onRefresh: _refreshHomeData,
+                  color: kPrimary,
+                  backgroundColor: const Color.fromRGBO(18, 18, 18, 0.95),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     // Chart Section
                     SliverToBoxAdapter(
@@ -380,6 +397,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       child: SizedBox(height: 20.h),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),
