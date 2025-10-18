@@ -231,9 +231,9 @@ class AuthenticatedHttpClient {
 
 /// Base repository class for FastAPI operations
 abstract class FastAPIRepository {
-  final AuthenticatedHttpClient _httpClient;
+  final AuthenticatedHttpClient httpClient;
 
-  FastAPIRepository(this._httpClient);
+  FastAPIRepository(this.httpClient);
 
   /// Handle API response and extract data
   T handleResponse<T>(
