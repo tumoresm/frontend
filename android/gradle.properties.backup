@@ -1,0 +1,51 @@
+org.gradle.jvmargs=-Xmx6G -XX:MaxMetaspaceSize=2G -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djdk.module.path.disabledFastPath=true -Djlink.debug=true -Dkotlin.daemon.jvm.options="-Xmx2G,-XX:MaxMetaspaceSize=512m" -Dandroid.enableJdkImageTransform=false -Dandroid.experimental.enableJdkImage=false -Dorg.gradle.internal.jdk.image.disabled=true
+android.useAndroidX=true
+android.enableJetifier=true
+
+# Gradle performance settings
+org.gradle.caching=true
+org.gradle.parallel=false
+org.gradle.configureondemand=false
+org.gradle.daemon=true
+org.gradle.workers.max=1
+
+
+# Android build optimizations
+android.experimental.enableNewResourceShrinker=false
+android.nonTransitiveRClass=false
+android.nonFinalResIds=false
+android.defaults.buildfeatures.buildconfig=true
+
+
+# Kotlin daemon fixes
+kotlin.daemon.useFallbackStrategy=true
+kotlin.daemon.jvmargs=-Xmx2G -XX:MaxMetaspaceSize=512m
+kotlin.incremental=false
+kotlin.incremental.useClasspathSnapshot=false
+
+# Additional compatibility fixes
+android.suppressUnsupportedCompileSdk=34
+android.suppressUnsupportedOptionWarnings=true
+
+# NUCLEAR JDK IMAGE TRANSFORMATION DISABLING
+android.enableJdkImageTransform=false
+android.experimental.enableJdkImage=false
+android.experimental.disableJdkImageTransform=true
+org.gradle.internal.jdk.image.disabled=true
+org.gradle.jvmargs.jlink.disable=true
+android.enableDexingArtifactTransform=false
+android.enableSeparateAnnotationProcessing=false
+org.gradle.unsafe.configuration-cache=false
+
+# FORCE DISABLE ALL JDK IMAGE FEATURES
+android.defaults.buildfeatures.aidl=false
+android.defaults.buildfeatures.renderScript=false
+android.defaults.buildfeatures.shaders=false
+android.experimental.enableNewResourceShrinker=false
+
+# EMERGENCY COMPATIBILITY SETTINGS
+# android.suppressUnsupportedCompileSdk=34
+# android.suppressUnsupportedOptionWarnings=true
+# android.suppressUnsupportedCompileSdkWarning=true
+# android.overrideVersionCheck=true
+# org.gradle.java.home=C:\\Program Files\\Java\\jdk-17
