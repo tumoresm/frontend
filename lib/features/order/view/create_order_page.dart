@@ -1,3 +1,4 @@
+import 'package:fieldforce/common/widgets/location_picker.dart';
 import 'package:fieldforce/core/utils.dart';
 import 'package:fieldforce/features/auth/controller/auth_controller.dart';
 import 'package:fieldforce/features/companies/model/company_model.dart';
@@ -7,8 +8,11 @@ import 'package:fieldforce/features/order/model/order_model.dart';
 import 'package:fieldforce/features/order/provider/order_provider.dart';
 import 'package:fieldforce/utils/utilities.dart';
 
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class CreateOrderPage extends ConsumerStatefulWidget {
   static route() => MaterialPageRoute(
@@ -50,53 +54,41 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
     super.dispose();
   }
 
-  void _showLocationPicker() {
-    // For now, we'll simulate location selection with a dialog
-    // In a real app, this would open a map picker
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Location'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'In a real implementation, this would open a map where you can select the customer\'s location.',
-            ),
-            SizedBox(height: 16),
-            Text(
-              'For demo purposes, we\'ll use a sample location:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text('Sample Location: Downtown Office'),
-            Text('Latitude: 40.7128'),
-            Text('Longitude: -74.0060'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _customerLocation = {
-                  'latitude': 40.7128,
-                  'longitude': -74.0060,
-                  'address': 'Downtown Office, New York, NY',
-                  'name': 'Sample Location',
-                };
-                _isLocationSelected = true;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Use Sample Location'),
-          ),
-        ],
+  void _showLocationPicker() async {
+    final LatLng? selectedLocation = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LocationPicker(),
       ),
     );
+
+    if (selectedLocation != null) {
+      if (!mounted) return;
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          selectedLocation.latitude,
+          selectedLocation.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final placemark = placemarks.first;
+          final address =
+              '${placemark.street ?? ''}, ${placemark.locality}, ${placemark.postalCode}, ${placemark.country}';
+          setState(() {
+            _customerLocation = {
+              'latitude': selectedLocation.latitude,
+              'longitude': selectedLocation.longitude,
+              'address': address,
+              'name': placemark.name ?? 'Selected Location',
+            };
+            _isLocationSelected = true;
+            customerAddressController.text = address;
+          });
+        }
+      } catch (e) {
+        // Handle geocoding errors
+        showSnackBar(context, 'Error getting address: $e');
+      }
+    }
   }
 
   void onSubmit(String userId) async {
@@ -120,7 +112,7 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
       productPrice: double.tryParse(productPriceController.text) ?? 0.0,
       shipping: double.tryParse(shippingController.text) ?? 0.0,
       taxRate: double.tryParse(taxRateController.text) ?? 0.0,
-      // TODO: Add fields for addons and accessories if needed
+
     );
 
     try {
@@ -140,8 +132,8 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
             statusReason: null,
           );
 
-      // If createOrder completes without an error, it was successful.
-      if (mounted) {
+    if (mounted) {
+      if (!mounted) return;
         showSnackBar(context, 'Order Created Successfully!');
         Navigator.of(context).pop();
       }
@@ -204,25 +196,21 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color:
-                              _isLocationSelected ? Colors.green : Colors.grey,
+                          color: _isLocationSelected ? Colors.green : Colors.grey,
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: ListTile(
                         leading: Icon(
                           Icons.location_on,
-                          color:
-                              _isLocationSelected ? Colors.green : Colors.grey,
+                          color: _isLocationSelected ? Colors.green : Colors.grey,
                         ),
                         title: Text(
                           _isLocationSelected
                               ? 'Location Selected'
                               : 'Select Customer Location',
                           style: TextStyle(
-                            color: _isLocationSelected
-                                ? Colors.green
-                                : Colors.grey[600],
+                            color: _isLocationSelected ? Colors.green : Colors.grey[600],
                           ),
                         ),
                         subtitle: _isLocationSelected
@@ -234,8 +222,7 @@ class _CreateOrderPageState extends ConsumerState<CreateOrderPage> {
                             : const Text('Tap to select location on map'),
                         trailing: _isLocationSelected
                             ? IconButton(
-                                icon:
-                                    const Icon(Icons.clear, color: Colors.red),
+                                icon: const Icon(Icons.clear, color: Colors.red),
                                 onPressed: () {
                                   setState(() {
                                     _customerLocation = {};
